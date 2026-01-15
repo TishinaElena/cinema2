@@ -1,40 +1,47 @@
-name: Deploy with SPA support
+name: Deploy React App
 
 on:
   push:
     branches: [main]
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          
+          node-version: '18'
+      
       - name: Install dependencies
         run: npm ci
-        
+      
       - name: Build
         run: npm run build
-        
-      - name: Add SPA support files
+      
+      - name: Fix SPA routing
         run: |
-          # Добавляем .nojekyll
-          touch ./build/.nojekyll
-          
-          # Копируем index.html как 404.html для SPA
-          cp ./build/index.html ./build/404.html
-          
-          # Создаем _redirects для Netlify-style routing (если нужно)
-          echo "/*    /index.html   200" > ./build/_redirects
-          
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
+          cp build/index.html build/404.html
+          echo "/* /index.html 200" > build/_redirects
+          touch build/.nojekyll
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          folder: build
-          branch: gh-pages  
+          path: './build'
+          
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
