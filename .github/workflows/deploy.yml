@@ -1,40 +1,40 @@
-name: Deploy to GitHub Pages
+name: Deploy with SPA support
 
 on:
   push:
-    branches: ["main"]  
-  workflow_dispatch:    # ручной запуск
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+    branches: [main]
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       
-      # Здесь добавляете шаги для сборки вашего проекта
-      # Например, для статического сайта:
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-      
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          # Укажите путь к собранным файлам
-          path: './dist'  # или другая папка с собранным проектом
-      
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build
+        run: npm run build
+        
+      - name: Add SPA support files
+        run: |
+          # Добавляем .nojekyll
+          touch ./build/.nojekyll
+          
+          # Копируем index.html как 404.html для SPA
+          cp ./build/index.html ./build/404.html
+          
+          # Создаем _redirects для Netlify-style routing (если нужно)
+          echo "/*    /index.html   200" > ./build/_redirects
+          
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build
+          branch: gh-pages  
