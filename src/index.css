@@ -6,361 +6,894 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f8f9fa;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-image: url('/public/images/cinema-bg.jpg'); /* Путь к изображению */
+  background-size: cover; /* Растягивает изображение на весь экран */
+  background-position: center; /* Центрирует изображение */
+  background-repeat: no-repeat; /* Не повторяет изображение */
+  background-attachment: fixed; /* Фон фиксируется при прокрутке */
   color: #333;
+  min-height: 100vh;
 }
 
-.app {
-  min-height: 100vh;
+
+
+
+/*Мои правки*/
+.userpage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.logo-custom {
+  font-family: 'Roboto', sans-serif;
+  font-size: 34px;
+  line-height: 39px;
+  letter-spacing: 0%;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  color: white;
+}
+
+.logo-bold {
+  font-weight: 900;
+}
+
+.logo-thin {
+  font-weight: 100;
+}
+
+header .sign-in-button {
+  background-color: #16A6AF;
+  color: #ffffff;
+  border: 2px solid #16A6AF;
+  font-size: 14px;
+  border-radius: 3px;
+}
+
+.date-picker {
+  width: 100%;
+}
+
+.date-picker .days-container {
+  display: flex;
+  align-items: flex-end;
+}
+
+.date-picker .day-button {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 2px;
+  margin: 0 1px;
+  flex: 1;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid #F1EBE6;
+  background-color: #F1EBE6; /* Бежевый фон для неактивных */
+  font-size: 12px;
+  color: #000000;
+  padding: 16px 8px;
+  height: 48px;
+}
+
+.date-picker .day-button.active {
+  background-color: #ffffff !important; /* Белый фон для активной */
+  color: #000000;
+  
+  padding: 1rem 0.5rem;
+  height: 52px;
+  
+}
+
+.date-picker .day-button .day-name {
+  font-weight: 400;
+  margin-bottom: 1px;
+}
+
+.date-picker .day-button.active .date-text {
+  color: rgba(0, 0, 0, 1) !important;
+   font-weight: 700;
+}
+
+.date-picker .day-button.active .day-name {
+   font-weight: 700;
+}
+
+.date-picker .day-button:not(.active) .date-text {
+  color: #000000 !important; 
+}
+
+/* Основные стили для карточек фильмов */
+.main-page-container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+/* Стили для карточки фильма */
+.movie-card {
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid #e9ecef;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.movie-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Стили для текста в карточке */
+.movie-title {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 0.75rem;
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+
+.movie-meta {
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+.movie-meta i {
+  color: #16A6AF;
+  margin-right: 0.25rem;
+}
+
+.movie-description {
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #495057;
+  margin-bottom: 0;
+}
+
+/* Стили для постера фильма */
+.movie-poster {
+  width: 125px;
+  height: 175px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для секции сеансов */
+.sessions-section {
+  background-color: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  padding: 1.25rem;
+}
+
+.hall-name {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.hall-name i {
+  color: #16A6AF;
+  margin-right: 0.5rem;
+}
+
+/* Стили для кнопок сеансов */
+.session-button {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+  min-width: 85px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 2px solid #16A6AF;
+  color: #16A6AF;
+  background-color: white;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.session-button:hover {
+  background-color: #16A6AF;
+  color: white;
+  transform: scale(1.05);
+  border-color: #16A6AF;
+}
+
+.session-button:active {
+  transform: scale(0.98);
+}
+
+/* Стили для панели дат */
+.date-navigation {
+  margin-bottom: 2rem;
+}
+
+.date-button {
+  font-family: 'Roboto', sans-serif;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+  text-align: center;
+  min-width: 85px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.date-button:hover {
+  border-color: #16A6AF;
+  background-color: #f8f9fa;
+}
+
+.date-button.active {
+  background-color: #16A6AF;
+  border-color: #16A6AF;
+  color: white;
+}
+
+.day-name {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.date-text {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+/* Стили для логотипа */
+.cinema-logo {
+  font-family: 'Roboto', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.logo-bold {
+  font-weight: 900;
+}
+
+.logo-thin {
+  font-weight: 300;
+}
+
+/* Стили для кнопки входа */
+.login-button {
+  font-family: 'Roboto', sans-serif;
+  background-color: #16A6AF;
+  border-color: #16A6AF;
+  border-radius: 8px;
+  padding: 0.5rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.login-button:hover {
+  background-color: #128a92;
+  border-color: #128a92;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(22, 166, 175, 0.2);
+}
+
+/* Адаптивные стили */
+@media (max-width: 768px) {
+  .movie-poster {
+    width: 100px;
+    height: 140px;
+  }
+  
+  .movie-title {
+    font-size: 1.25rem;
+  }
+  
+  .session-button {
+    min-width: 75px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+  }
+  
+  .date-button {
+    min-width: 70px;
+    padding: 0.6rem 0.8rem;
+  }
+}
+
+/* Основные стили для карточек фильмов */
+.movie-schedule-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.no-sessions-alert {
+  margin-top: 2rem;
+  border-radius: 8px;
+  background-color: #e7f6f7;
+  border-color: #16A6AF;
+  color: #0d7377;
+}
+
+.no-sessions-alert i {
+  color: #16A6AF;
+}
+
+/* Карточка фильма */
+.movie-card {
+  border-radius: 2px !important;
+  background: linear-gradient(135deg, #F1EBE6F2 95%, #F1EBE6F2 95%);
+  border: 1px solid #e9ecef;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* Внутреннее содержимое карточки */
+.movie-card-content {
   display: flex;
   flex-direction: column;
 }
 
-/* Навигация */
-.navbar-brand {
-  font-weight: bold;
-  font-size: 1.5rem;
+/* Секция с информацией о фильме */
+.movie-info-section {
+  display: flex;
+  padding: 1.5rem;
+  border-bottom: 1px solid #f1f3f5;
 }
 
-/* Карточки */
-.card {
-  border: none;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
+/* Контейнер постера */
+.movie-poster-container {
+  flex-shrink: 0;
+  margin-right: 1.5rem;
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+.movie-poster {
+  width: 125px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 0px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Кнопки */
-.btn {
+/* Детали фильма */
+.movie-details {
+  flex-grow: 1;
+}
+
+.movie-title {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 0.75rem;
+  font-size: 16px;
+  line-height: 18px;
+}
+
+.movie-meta {
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: #000000;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.meta-divider {
+  color: #000000;
+  font-weight: 300px;
+}
+
+.movie-description {
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 16px;
+  color: #000000;
+  margin: 0;
+}
+
+/* Секция сеансов */
+.sessions-section {
+  padding: 1.5rem;
+  background-color: #F1EBE6F2;
+}
+
+/* Сеансы по залам */
+.hall-sessions {
+  margin-bottom: 1.25rem;
+}
+
+.hall-sessions:last-child {
+  margin-bottom: 0;
+}
+
+.hall-name {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 0.75rem;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+
+/* Список сеансов */
+.sessions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Кнопки сеансов */
+.session-button {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  min-width: 85px;
+  padding: 0.5rem 1rem;
   border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #0d6efd, #0a58ca);
-  border: none;
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, #0a58ca, #084298);
-  transform: translateY(-1px);
-}
-
-/* Формы */
-.form-control, .form-select {
-  border-radius: 8px;
-  border: 1px solid #ced4da;
-  padding: 10px 15px;
-}
-
-.form-control:focus, .form-select:focus {
-  border-color: #86b7fe;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-
-/* Анимации */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fade-in {
-  animation: fadeIn 0.5s ease-out;
-}
-
-/* Утилиты */
-.clickable {
-  cursor: pointer;
-}
-
-.required::after {
-  content: " *";
-  color: #dc3545;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-  .container {
-    padding-left: 15px;
-    padding-right: 15px;
-  }
-  
-  .card-body {
-    padding: 1rem;
-  }
-  
-  .btn {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.875rem;
-  }
-}
-
-/* Кастомные классы */
-.screen {
-  position: relative;
-  margin: 40px 0;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  background-color: white;
+  transition: all 0.2s ease;
+  font-size: 15px;
   text-align: center;
 }
 
-.screen::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 10%;
-  right: 10%;
-  height: 4px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    #6c757d 20%, 
-    #adb5bd 50%, 
-    #6c757d 80%, 
-    transparent 100%);
-  border-radius: 2px;
-  transform: translateY(-50%);
+.session-button:hover {
+  background-color: #5b1959;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(22, 166, 175, 0.2);
 }
 
-.screen-label {
-  font-weight: bold;
-  color: #6c757d;
-  font-size: 1.2rem;
-  margin-bottom: 10px;
+.session-button:active {
+  transform: translateY(0);
 }
 
-/* Эффекты для билета */
-.ticket-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border: 3px solid #0d6efd;
-  border-radius: 20px;
-  overflow: hidden;
-}
-
-.ticket-info .info-item {
-  padding: 8px 16px;
-  background: white;
-  border-radius: 10px;
-  border: 1px solid #dee2e6;
-  margin-bottom: 10px;
-}
-
-/* Стили для печати */
-@media print {
-  .no-print {
-    display: none !important;
+/* Адаптивные стили */
+@media (max-width: 768px) {
+  .movie-info-section {
+    flex-direction: column;
+    padding: 1.25rem;
   }
   
-  .ticket-card {
-    border: 2px solid #000;
-    box-shadow: none;
-    page-break-inside: avoid;
+  .movie-poster-container {
+    margin-right: 0;
+    margin-bottom: 1.25rem;
+    align-self: center;
+  }
+  
+  .movie-poster {
+    width: 120px;
+    height: 170px;
+  }
+  
+  .movie-title {
+    font-size: 1.3rem;
+    text-align: center;
+  }
+  
+  .movie-meta {
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .sessions-section {
+    padding: 1.25rem;
+  }
+  
+  .session-button {
+    min-width: 75px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.9rem;
   }
 }
 
-/* Лоадеры */
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
 
-/* Уведомления */
-.notification {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
-  min-width: 300px;
-  animation: slideIn 0.3s ease-out;
-}
 
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
 
-/* Дополнения для админки */
-.admin-sidebar {
-  min-height: calc(100vh - 56px);
-  background: #343a40;
-  color: white;
-  transition: all 0.3s;
-}
 
-.admin-sidebar .nav-link {
-  color: rgba(255, 255, 255, 0.8);
-  padding: 10px 15px;
-  border-radius: 5px;
-  margin: 2px 0;
-}
 
-.admin-sidebar .nav-link:hover,
-.admin-sidebar .nav-link.active {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-}
 
-/* Таблицы */
-.table-hover tbody tr:hover {
-  background-color: rgba(13, 110, 253, 0.05);
-}
 
-.table th {
-  font-weight: 600;
-  border-top: none;
-  color: #495057;
-}
 
-/* Модальные окна */
-.modal-content {
-  border-radius: 15px;
-  border: none;
-}
-
-.modal-header {
-  border-bottom: 1px solid #dee2e6;
-  background: #f8f9fa;
-  border-radius: 15px 15px 0 0;
-}
-
-/* Бейджи */
-.badge {
-  font-weight: 500;
-  padding: 5px 10px;
-  border-radius: 20px;
-}
-
-/* Тени */
-.shadow-sm {
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-}
-
-.shadow {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-}
-
-.shadow-lg {
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
-}
-
-/* Поля ввода с иконками */
-.input-with-icon {
-  position: relative;
-}
-
-.input-with-icon .form-control {
-  padding-left: 40px;
-}
-
-.input-with-icon .icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6c757d;
-  pointer-events: none;
-}
-
-/* Карусель на главной */
-.carousel-item img {
-  height: 400px;
-  object-fit: cover;
-}
-
-@media (max-width: 768px) {
-  .carousel-item img {
-    height: 250px;
-  }
-}
-
-/* Стили для выбора мест в зале */
-.hall-container {
-  max-width: 100%;
-  overflow-x: auto;
+/* Стили для страницы зала */
+.hall-layout {
+  background: white;
+  border-radius: 8px;
   padding: 20px;
-  background: #f8f9fa;
-  border-radius: 10px;
+  margin-top: 20px;
 }
 
-.seat-row {
+.screen {
+  text-align: center;
+  background: linear-gradient(to right, #333, #666, #333);
+  color: white;
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 4px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.seats-container {
+  min-height: 300px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 15px;
+  background: #f9f9f9;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.booking-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.book-btn {
+  padding: 12px 30px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.book-btn:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.book-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Стили для мест в зале */
+.seats-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 10px;
+  padding: 20px;
 }
 
 .seat {
   width: 40px;
   height: 40px;
-  border-radius: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  font-weight: bold;
-  user-select: none;
-  margin: 0 5px;
+  font-size: 12px;
 }
 
+.seat:hover {
+  background: #e9ecef;
+  transform: scale(1.05);
+}
+
+.seat.selected {
+  background: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+
+.seat.occupied {
+  background: #dc3545;
+  color: white;
+  cursor: not-allowed;
+}
+
+.seat.vip {
+  background: #ffc107;
+  color: #212529;
+}
+
+/* Адаптивность */
 @media (max-width: 768px) {
+  .movie-info {
+    flex-direction: column;
+  }
+  
+  .movie-poster {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+  }
+  
+  .main-wrap {
+    padding: 10px;
+  }
+  
+  .seats-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+  
   .seat {
-    width: 30px;
-    height: 30px;
-    font-size: 12px;
-    margin: 0 3px;
+    width: 35px;
+    height: 35px;
+  }
+  
+  /* Стили для кнопок времени сеансов */
+.time-button {
+  min-width: 80px;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.time-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+}
+
+.time-button .small {
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+/* Адаптивность для кнопок времени */
+@media (max-width: 768px) {
+  .time-button {
+    min-width: 70px;
+    height: 55px;
+    padding: 6px;
+    font-size: 14px;
+  }
+  
+  .time-button .small {
+    font-size: 10px;
   }
 }
 
-.seat:hover:not(.seat-blocked) {
+/* Стили для страницы зала */
+.screen {
+  max-width: 600px;
+  margin: 0 auto;
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+.seat-button {
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  padding: 0;
+}
+
+.seat-button:hover:not(:disabled) {
   transform: scale(1.1);
 }
 
-.seat-standard {
-  background-color: #e9ecef;
-  border: 2px solid #6c757d;
+.seat-legend {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+
+.seat-legend.available {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+}
+
+.seat-legend.vip {
+  background-color: #ffc107;
+  border: 1px solid #ffc107;
+}
+
+.seat-legend.selected {
+  background-color: #007bff;
+  border: 1px solid #007bff;
+}
+
+.hall-layout {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Стили для админских страниц */
+.admin-page {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.admin-container {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 30px;
+  margin-top: 50px;
+}
+
+.admin-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+}
+
+.admin-sidebar {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  height: 100%;
+}
+
+.admin-content {
+  background: white;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.admin-nav-link {
   color: #495057;
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: all 0.3s;
+  text-decoration: none;
+  display: block;
 }
 
-.seat-vip {
-  background-color: #fff3cd;
-  border: 2px solid #ffc107;
-  color: #856404;
+.admin-nav-link:hover {
+  background-color: #e9ecef;
+  color: #007bff;
+  transform: translateX(5px);
 }
 
-.seat-selected {
-  background-color: #0d6efd;
-  border-color: #0a58ca;
+.admin-nav-link.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
 
-.seat-blocked {
-  background-color: #dc3545;
-  border-color: #b02a37;
+.admin-stats-card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s;
+}
+
+.admin-stats-card:hover {
+  transform: translateY(-5px);
+}
+
+.admin-stats-icon {
+  font-size: 40px;
+  margin-bottom: 15px;
+}
+
+.admin-table {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.admin-form-card {
+  background: white;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.admin-btn-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
   color: white;
-  cursor: not-allowed;
-  opacity: 0.5;
+  transition: all 0.3s;
+}
+
+.admin-btn-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+  color: white;
+}
+
+/* Адаптированные стили под цветовую схему из кода */
+.admin-page {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-container {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 30px;
+}
+
+/* Цвета как в оригинальном коде */
+.admin-primary-color {
+  color: #63536C;
+}
+
+.admin-primary-bg {
+  background-color: #63536C;
+}
+
+.admin-secondary-color {
+  color: #16A6AF;
+}
+
+.admin-secondary-bg {
+  background-color: #16A6AF;
+}
+
+/* Ховер-эффекты */
+.btn-admin-primary {
+  background-color: #16A6AF;
+  border-color: #16A6AF;
+  color: white;
+}
+
+.btn-admin-primary:hover {
+  background-color: #12858c;
+  border-color: #12858c;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(22, 166, 175, 0.3);
+}
+
+/* Поля ввода */
+.form-control-admin {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px 15px;
+  transition: all 0.3s;
+}
+
+.form-control-admin:focus {
+  border-color: #16A6AF;
+  box-shadow: 0 0 0 0.2rem rgba(22, 166, 175, 0.25);
+}
 }

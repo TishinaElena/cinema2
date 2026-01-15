@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Container,
@@ -14,58 +14,134 @@ import { cinemaAPI } from '../../services/api';
 
 const AdminLoginPage = () => {
   const [credentials, setCredentials] = useState({
-    login: '',
-    password: ''
+    login: 'shfe-diplom@netology.ru',
+    password: 'shfe-diplom'
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [apiStatus, setApiStatus] = useState('checking'); // checking, online, offline
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  // Проверяем доступность API при загрузке компонента
+  useEffect(() => {
+    checkAPIStatus();
+  }, []);
 
+  const checkAPIStatus = async () => {
     try {
-      // Тестовый вход для разработки
-      // Если API не работает, используем этот код
-      const mockResult = {
-        token: 'test-token-' + Date.now(),
-        user: {
-          id: 1,
-          login: credentials.login,
-          role: 'admin'
-        }
-      };
-      
-      // Сохраняем токен
-      localStorage.setItem('adminToken', mockResult.token);
-      
-      // Переходим в админку
-      navigate('/admin');
-      
-      // Если хотите использовать реальный API, раскомментируйте:
-      /*
-      const result = await cinemaAPI.login(credentials);
-      
-      if (result.token) {
-        localStorage.setItem('adminToken', result.token);
-        navigate('/admin');
+      const response = await fetch('https://shfe-diplom.neto-server.ru/alldata');
+      if (response.ok) {
+        setApiStatus('online');
       } else {
-        setError('Ошибка авторизации');
+        setApiStatus('offline');
       }
-      */
     } catch (err) {
-      setError(err.message || 'Ошибка соединения с сервером');
-    } finally {
-      setLoading(false);
+      setApiStatus('offline');
     }
   };
+
+// В компоненте логина добавьте проверку CORS
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setLoading(true);
+
+  try {
+    // Используем реальную авторизацию через API
+    const result = await cinemaAPI.login(credentials);
+    
+    console.log('Auth result:', result);
+    
+    // Проверяем результат авторизации
+    if (result && (typeof result === 'string' && result.includes('успешно'))) {
+      // Сохраняем информацию об авторизации
+      const authData = {
+        isAuthenticated: true,
+        login: credentials.login,
+        timestamp: Date.now(),
+        isRealAPI: true
+      };
+      
+      localStorage.setItem('adminAuth', JSON.stringify(authData));
+      localStorage.setItem('adminToken', `auth-${Date.now()}`);
+      
+      // Показываем уведомление об успехе
+      setError(''); // Очищаем ошибки
+      
+      // Небольшая задержка для UX
+      setTimeout(() => {
+        navigate('/admin');
+      }, 500);
+      
+    } else {
+      setError('Ошибка авторизации: неверные учетные данные');
+    }
+  } catch (err) {
+    console.error('Auth error:', err);
+    
+    // Специальная обработка CORS ошибок
+    if (err.message.includes('Failed to fetch') || 
+        err.message.includes('NetworkError') ||
+        err.message.includes('CORS')) {
+      
+      // В случае CORS ошибки, разрешаем тестовый вход
+      setError('CORS ошибка: API сервер не разрешает кросс-доменные запросы. Используется тестовый режим.');
+      
+      // Авторизуем в тестовом режиме
+      const authData = {
+        isAuthenticated: true,
+        login: credentials.login,
+        timestamp: Date.now(),
+        isRealAPI: false,
+        isTestMode: true
+      };
+      
+      localStorage.setItem('adminAuth', JSON.stringify(authData));
+      localStorage.setItem('adminToken', `test-auth-${Date.now()}`);
+      
+      setTimeout(() => {
+        navigate('/admin');
+      }, 1000);
+      
+    } else {
+      setError(`Ошибка авторизации: ${err.message}`);
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleChange = (e) => {
     setCredentials({
       ...credentials,
       [e.target.name]: e.target.value
+    });
+  };
+
+  const handleQuickLogin = () => {
+    setCredentials({
+      login: 'shfe-diplom@netology.ru',
+      password: 'shfe-diplom'
+    });
+  };
+
+  const handleTestModeLogin = () => {
+    // Режим для разработки когда API недоступен
+    localStorage.setItem('adminAuth', JSON.stringify({
+      isAuthenticated: true,
+      login: 'test-admin',
+      timestamp: Date.now(),
+      isTestMode: true
+    }));
+    
+    localStorage.setItem('authToken', 'test-token-' + Date.now());
+    navigate('/admin');
+  };
+
+  const handleClearCredentials = () => {
+    setCredentials({
+      login: '',
+      password: ''
     });
   };
 
@@ -81,10 +157,35 @@ const AdminLoginPage = () => {
                   Администратор
                 </h2>
                 <p className="text-muted">Войдите в систему управления</p>
+                
+                {/* Статус API */}
+                <div className="mb-3">
+                  {apiStatus === 'checking' && (
+                    <span className="badge bg-secondary">
+                      <Spinner animation="border" size="sm" className="me-1" />
+                      Проверка соединения...
+                    </span>
+                  )}
+                  {apiStatus === 'online' && (
+                    <span className="badge bg-success">
+                      <i className="bi bi-check-circle me-1"></i>
+                      API доступен
+                    </span>
+                  )}
+                  {apiStatus === 'offline' && (
+                    <span className="badge bg-warning">
+                      <i className="bi bi-exclamation-triangle me-1"></i>
+                      API недоступен
+                    </span>
+                  )}
+                </div>
               </div>
 
               {error && (
-                <Alert variant="danger" className="text-center">
+                <Alert 
+                  variant={error.includes('API сервер недоступен') ? 'warning' : 'danger'} 
+                  className="text-center"
+                >
                   <i className="bi bi-exclamation-triangle me-2"></i>
                   {error}
                 </Alert>
@@ -123,7 +224,7 @@ const AdminLoginPage = () => {
                   />
                 </Form.Group>
 
-                <div className="d-grid">
+                <div className="d-grid gap-2">
                   <Button 
                     variant="primary" 
                     type="submit" 
@@ -142,10 +243,44 @@ const AdminLoginPage = () => {
                     ) : (
                       <>
                         <i className="bi bi-box-arrow-in-right me-2"></i>
-                        Войти
+                        Войти через API
                       </>
                     )}
                   </Button>
+                  
+                  <div className="d-flex gap-2">
+                    <Button 
+                      variant="outline-secondary" 
+                      onClick={handleQuickLogin}
+                      size="sm"
+                      className="flex-fill"
+                    >
+                      <i className="bi bi-lightning me-2"></i>
+                      Тестовые данные
+                    </Button>
+                    
+                    <Button 
+                      variant="outline-secondary" 
+                      onClick={handleClearCredentials}
+                      size="sm"
+                      className="flex-fill"
+                    >
+                      <i className="bi bi-eraser me-2"></i>
+                      Очистить
+                    </Button>
+                  </div>
+                  
+                  {/* Кнопка тестового режима - показываем только если API недоступен */}
+                  {apiStatus === 'offline' && (
+                    <Button 
+                      variant="warning" 
+                      onClick={handleTestModeLogin}
+                      size="lg"
+                    >
+                      <i className="bi bi-tools me-2"></i>
+                      Войти в тестовом режиме
+                    </Button>
+                  )}
                 </div>
 
                 <div className="text-center mt-4">
@@ -159,17 +294,7 @@ const AdminLoginPage = () => {
                 </div>
               </Form>
 
-              <div className="mt-4 pt-3 border-top text-center">
-                <small className="text-muted">
-                  <i className="bi bi-info-circle me-2"></i>
-                  Для доступа требуется авторизация администратора
-                </small>
-                <div className="mt-2">
-                  <small className="text-info">
-                    Тестовые данные: любой логин/пароль
-                  </small>
-                </div>
-              </div>
+              
             </Card.Body>
           </Card>
         </Col>

@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { cinemaAPI } from '../services/api';
-import { format, addDays, isPast } from 'date-fns';
 
 const DataContext = createContext(null);
 
@@ -14,21 +13,28 @@ export const useData = () => {
 
 export const DataProvider = ({ children }) => {
   const [data, setData] = useState({
+    films: [],
     halls: [],
-    movies: [],
-    seances: [],
-    schedules: {}
+    seances: []
   });
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  });
 
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const result = await cinemaAPI.getAllData();
-      setData(result);
+      setData({
+        films: result.films || [],
+        halls: result.halls || [],
+        seances: result.seances || []
+      });
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -42,65 +48,29 @@ export const DataProvider = ({ children }) => {
     loadData();
   }, [loadData]);
 
-  // Получение сеансов на выбранную дату
-  const getSeancesForDate = (date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return data.seances.filter(seance => {
-      const seanceDate = format(new Date(seance.startTime), 'yyyy-MM-dd');
-      return seanceDate === dateStr;
-    });
-  };
-
-  // Получение открытых залов
+  // Упрощенные методы для работы с данными
   const getOpenHalls = () => {
-    return data.halls.filter(hall => hall.isOpen);
+    return data.halls.filter(hall => hall.hall_open === 1);
   };
 
-  // Получение активных сеансов (будущие + в открытых залах)
-  const getActiveSeances = (date) => {
-    const seances = getSeancesForDate(date);
-    const openHalls = getOpenHalls();
-    const openHallIds = openHalls.map(hall => hall.id);
-    
-    return seances.filter(seance => {
-      const isHallOpen = openHallIds.includes(seance.hallId);
-      const isFuture = !isPast(new Date(seance.startTime));
-      return isHallOpen && isFuture;
-    });
+  const getFilmById = (filmId) => {
+    return data.films.find(film => film.id === filmId);
   };
 
-  // Получение фильма по ID
-  const getMovieById = (movieId) => {
-    return data.movies.find(movie => movie.id === movieId);
-  };
-
-  // Получение зала по ID
   const getHallById = (hallId) => {
     return data.halls.find(hall => hall.id === hallId);
   };
 
-  // Дата на неделю вперед
-  const getWeekDates = () => {
-    const dates = [];
-    for (let i = 0; i < 7; i++) {
-      dates.push(addDays(new Date(), i));
-    }
-    return dates;
-  };
-
   const value = {
-    data,
+    ...data, // films, halls, seances доступны напрямую
     loading,
     error,
     selectedDate,
     setSelectedDate,
     loadData,
-    getSeancesForDate,
-    getActiveSeances,
     getOpenHalls,
-    getMovieById,
+    getFilmById,
     getHallById,
-    getWeekDates,
     refreshData: loadData
   };
 
