@@ -40,7 +40,7 @@ const AdminLoginPage = () => {
     }
   };
 
-// В компоненте логина добавьте проверку CORS
+// В компоненте логина исправьте эту часть:
 const handleSubmit = async (e) => {
   e.preventDefault();
   setError('');
@@ -52,18 +52,19 @@ const handleSubmit = async (e) => {
     
     console.log('Auth result:', result);
     
-    // Проверяем результат авторизации
-    if (result && (typeof result === 'string' && result.includes('успешно'))) {
+    // Проверяем результат авторизации - теперь правильно проверяем объект
+    if (result && result.success === true) {
       // Сохраняем информацию об авторизации
       const authData = {
         isAuthenticated: true,
         login: credentials.login,
         timestamp: Date.now(),
-        isRealAPI: true
+        isRealAPI: true,
+        token: result.token || `auth-${Date.now()}`
       };
       
       localStorage.setItem('adminAuth', JSON.stringify(authData));
-      localStorage.setItem('adminToken', `auth-${Date.now()}`);
+      localStorage.setItem('adminToken', authData.token);
       
       // Показываем уведомление об успехе
       setError(''); // Очищаем ошибки

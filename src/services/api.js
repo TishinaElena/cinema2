@@ -1,34 +1,19 @@
-// services/api.js
 const API_BASE_URL = 'https://shfe-diplom.neto-server.ru';
 
 class CinemaAPI {
   constructor() {
     this.baseURL = API_BASE_URL;
-    this.useMock = false; // По умолчанию используем реальный API
-    this.isOnline = true;
+    this.token = null;
     
-    // Проверяем доступность API при создании
-    this.checkApiStatus();
-  }
-
-  // Метод для проверки статуса API
-  async checkApiStatus() {
+    // Попробуем получить токен из localStorage
     try {
-      // Пробуем простой GET запрос без сложных заголовков
-      const testResponse = await fetch(`${this.baseURL}/alldata`, {
-        method: 'GET',
-        mode: 'no-cors', // Используем no-cors для проверки
-        cache: 'no-cache',
-      });
-      
-      // Если не выбросило ошибку, сервер доступен
-      this.isOnline = true;
-      console.log('API status: ONLINE');
-      return 'online';
-    } catch (error) {
-      this.isOnline = false;
-      console.log('API status: OFFLINE', error.message);
-      return 'offline';
+      const storedToken = localStorage.getItem('cinema_token');
+      if (storedToken) {
+        this.token = storedToken;
+        console.log('Token loaded from localStorage');
+      }
+    } catch (e) {
+      console.log('No token in localStorage');
     }
   }
 
@@ -36,13 +21,7 @@ class CinemaAPI {
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     
-    console.log(`API Request [${options.method || 'GET'}]: ${endpoint}`);
-    
-    // Если API offline, используем мок-данные
-    if (!this.isOnline && endpoint !== '/login') {
-      console.log('API offline, using mock data for:', endpoint);
-      return this.getMockResponse(endpoint, options);
-    }
+    console.log(`API Request [${options.method || 'GET'}]: ${url}`);
     
     try {
       // Подготавливаем заголовки
@@ -51,8 +30,13 @@ class CinemaAPI {
         ...options.headers,
       };
       
-      // Для POST запросов с FormData не устанавливаем Content-Type
-      if (!(options.body instanceof FormData) && options.method === 'POST') {
+      // Добавляем токен авторизации, если есть
+      if (this.token) {
+        headers['Authorization'] = `Bearer ${this.token}`;
+      }
+      
+      // Для POST запросов с URLSearchParams устанавливаем правильный Content-Type
+      if (options.body && options.body instanceof URLSearchParams) {
         headers['Content-Type'] = 'application/x-www-form-urlencoded';
       }
       
@@ -61,8 +45,8 @@ class CinemaAPI {
         method: options.method || 'GET',
         headers: headers,
         mode: 'cors',
-        credentials: 'omit',
         cache: 'no-cache',
+        redirect: 'follow',
       };
       
       // Добавляем body, если есть
@@ -80,24 +64,47 @@ class CinemaAPI {
       const response = await fetch(url, fetchOptions);
       
       console.log(`Response status: ${response.status} ${response.statusText}`);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      // Пытаемся получить текст ответа
+      const responseText = await response.text();
+      console.log('Response text (first 500 chars):', responseText.substring(0, 500));
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Response error:', errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
+        console.error('Response error:', responseText);
+        
+        // Пытаемся распарсить как JSON для получения сообщения об ошибке
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        try {
+          const errorData = JSON.parse(responseText);
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (e) {
+          // Не JSON, используем текст как есть
+          if (responseText) {
+            errorMessage = responseText;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
-      
-      // Получаем ответ
-      const responseText = await response.text();
-      console.log('Response text (first 200 chars):', responseText.substring(0, 200));
       
       // Пытаемся распарсить JSON
       let data;
       try {
         data = JSON.parse(responseText);
+        console.log('Parsed JSON data:', data);
       } catch (e) {
-        // Если не JSON, возвращаем текст
-        return responseText;
+        console.error('Failed to parse JSON:', e);
+        throw new Error('Некорректный JSON в ответе сервера');
+      }
+      
+      // Если есть success: false, обрабатываем как ошибку
+      if (data.success === false) {
+        throw new Error(data.message || 'Запрос не выполнен');
       }
       
       // Возвращаем result если есть, иначе весь объект
@@ -105,162 +112,116 @@ class CinemaAPI {
       
     } catch (error) {
       console.error(`API request failed for ${endpoint}:`, error.message);
-      
-      // Для авторизации пробрасываем ошибку
-      if (endpoint === '/login') {
-        // Но для тестовых данных делаем исключение
-        if (options.body) {
-          try {
-            const params = new URLSearchParams(options.body);
-            const login = params.get('login');
-            const password = params.get('password');
-            
-            if (login === 'shfe-diplom@netology.ru' && password === 'shfe-diplom') {
-              console.log('Using fallback auth for test credentials');
-              return 'Авторизация пройдена успешно! (fallback)';
-            }
-          } catch (e) {
-            // Не удалось распарсить body
-          }
-        }
-        
-        throw new Error(`Ошибка авторизации: ${error.message}`);
-      }
-      
-      // Для других запросов возвращаем мок-данные
-      return this.getMockResponse(endpoint, options);
+      throw error;
     }
   }
 
-  // Получение мок-ответа
-  getMockResponse(endpoint, options) {
-    console.log('Generating mock response for:', endpoint);
+// === АВТОРИЗАЦИЯ ===
+async login(credentials) {
+  console.log('Login attempt with:', { 
+    login: credentials.login,
+    password: credentials.password 
+  });
+
+  const formData = new URLSearchParams();
+  formData.append('login', credentials.login);
+  formData.append('password', credentials.password);
+
+  try {
+    console.log('Sending POST to /login with data:', Object.fromEntries(formData));
     
-    // АВТОРИЗАЦИЯ
-    if (endpoint === '/login' && options.method === 'POST') {
-      try {
-        const params = new URLSearchParams(options.body);
-        const login = params.get('login');
-        const password = params.get('password');
-        
-        if (login === 'shfe-diplom@netology.ru' && password === 'shfe-diplom') {
-          return 'Авторизация пройдена успешно! (mock)';
-        } else {
-          return { error: 'Неверные учетные данные' };
-        }
-      } catch {
-        return { error: 'Ошибка обработки запроса' };
-      }
+    const result = await this.request('/login', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    console.log('Login raw result:', result);
+    
+    // API возвращает строку с Unicode символами
+    // Декодируем её
+    let message = result;
+    if (typeof result === 'string') {
+      message = this.decodeUnicode(result);
+    } else if (result && typeof result === 'object') {
+      // Если результат объект, ищем в нем сообщение
+      message = result.message || JSON.stringify(result);
     }
     
-    // ВСЕ ДАННЫЕ
-    if (endpoint === '/alldata') {
+    console.log('Decoded message:', message);
+    
+    // Проверяем, содержит ли сообщение об успешной авторизации
+    if (message && message.includes('Авторизация пройдена успешно')) {
+      // Сохраняем информацию о сессии
+      const authData = {
+        isAuthenticated: true,
+        login: credentials.login,
+        timestamp: Date.now(),
+        isRealAPI: true,
+        token: `api-auth-${Date.now()}`
+      };
+      
+      try {
+        localStorage.setItem('adminAuth', JSON.stringify(authData));
+        localStorage.setItem('adminToken', authData.token);
+        console.log('Auth data saved to localStorage');
+      } catch (e) {
+        console.log('Failed to save auth data to localStorage:', e);
+      }
+      
       return {
-        films: [
-          {
-            id: 1722,
-            film_name: "Мстители: Война бесконечности",
-            film_description: "Спустя два года после битвы в Лейпциге и разрушения Асгарда, супергерои узнают, что безумный титан Танос намерен получить Камни Бесконечности — мощнейшие артефакты во вселенной.",
-            film_duration: "149",
-            film_origin: "США",
-            film_poster: "https://shfe-diplom.neto-server.ru/storage/app/img/posters/Jr09jQQ3glEEkMbWtOJlrETUg4iEIczp3wFS9wV4.png",
-            film_genre: "Фантастика, Боевик",
-            film_age_rating: "16+"
-          }
-        ],
-        halls: [
-          { 
-            id: 5450, 
-            hall_name: "Зал 10",
-            hall_rows: 10,
-            hall_places: 10,
-            hall_config: [
-              ["disabled", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "disabled"],
-              ["standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart"],
-              ["standart", "standart", "standart", "standart", "vip", "vip", "standart", "standart", "standart", "standart"],
-              ["standart", "standart", "standart", "vip", "vip", "vip", "vip", "standart", "standart", "standart"],
-              ["standart", "standart", "standart", "vip", "vip", "vip", "vip", "standart", "standart", "standart"],
-              ["standart", "standart", "standart", "vip", "vip", "vip", "vip", "standart", "standart", "standart"],
-              ["standart", "standart", "standart", "vip", "vip", "vip", "vip", "standart", "standart", "standart"],
-              ["standart", "standart", "standart", "vip", "vip", "vip", "vip", "standart", "standart", "standart"],
-              ["standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart"],
-              ["standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart"]
-            ],
-            hall_price_standart: 300,
-            hall_price_vip: 400,
-            hall_open: 1
-          }
-        ],
-        seances: [
-          { 
-            id: 3640, 
-            seance_filmid: "1722",
-            seance_hallid: "5450",
-            seance_time: "16:50"
-          }
-        ]
+        success: true,
+        message: 'Авторизация успешна',
+        rawMessage: message,
+        token: authData.token
       };
     }
     
-    // ОТВЕТ ПО УМОЛЧАНИЮ
-    return { 
-      success: true, 
-      message: 'Mock response', 
-      timestamp: new Date().toISOString() 
-    };
-  }
-
-  // === АВТОРИЗАЦИЯ ===
-  async login(credentials) {
-    console.log('Login attempt with:', { 
-      login: credentials.login,
-      hasPassword: !!credentials.password 
-    });
-
-    const formData = new URLSearchParams();
-    formData.append('login', credentials.login);
-    formData.append('password', credentials.password);
-
-    try {
-      const result = await this.request('/login', {
-        method: 'POST',
-        body: formData,
-      });
+    throw new Error(message || 'Неизвестная ошибка авторизации');
+    
+  } catch (error) {
+    console.error('Login failed:', error);
+    
+    // Для тестовых данных возвращаем успех
+    if (credentials.login === 'shfe-diplom@netology.ru' && 
+        credentials.password === 'shfe-diplom') {
+      console.log('Using test credentials fallback');
       
-      console.log('Login result:', result);
+      const authData = {
+        isAuthenticated: true,
+        login: credentials.login,
+        timestamp: Date.now(),
+        isRealAPI: true,
+        token: `test-auth-${Date.now()}`
+      };
       
-      // Проверяем успешность авторизации
-      if (typeof result === 'string' && result.includes('Авторизация')) {
-        return result;
+      try {
+        localStorage.setItem('adminAuth', JSON.stringify(authData));
+        localStorage.setItem('adminToken', authData.token);
+      } catch (e) {
+        console.log('Failed to save test auth data:', e);
       }
       
-      // Если результат не строка, проверяем другие форматы
-      if (result && (result.success || result.message)) {
-        return result.message || 'Авторизация успешна';
-      }
-      
-      throw new Error('Неверный формат ответа от сервера');
-      
-    } catch (error) {
-      console.error('Login failed:', error);
-      
-      // Для тестовых данных возвращаем успех
-      if (credentials.login === 'shfe-diplom@netology.ru' && 
-          credentials.password === 'shfe-diplom') {
-        console.log('Using fallback auth for test credentials');
-        return 'Авторизация пройдена успешно! (fallback)';
-      }
-      
-      throw new Error(`Ошибка авторизации: ${error.message}`);
+      return {
+        success: true,
+        message: 'Авторизация пройдена успешно! (тестовый режим)',
+        token: authData.token
+      };
     }
+    
+    throw new Error(`Ошибка авторизации: ${error.message}`);
   }
+}
 
-  // === ПОЛУЧЕНИЕ ДАННЫХ ===
+  // === ПОЛУЧЕНИЕ ВСЕХ ДАННЫХ ===
   async getAllData() {
     try {
+      console.log('Getting all data from /alldata endpoint');
+      
       const result = await this.request('/alldata', {
         method: 'GET',
       });
+      
+      console.log('All data result:', result);
       
       if (!result) {
         throw new Error('Пустой ответ от сервера');
@@ -271,10 +232,51 @@ class CinemaAPI {
     } catch (error) {
       console.error('Failed to get all data:', error);
       
-      // Возвращаем мок-данные в трансформированном виде
-      const mockData = this.getMockResponse('/alldata', { method: 'GET' });
-      return this.transformData(mockData);
+      // Для отладки возвращаем тестовые данные
+      console.log('Returning test data for debugging');
+      return this.getTestData();
     }
+  }
+
+  // Тестовые данные для отладки
+  getTestData() {
+    return this.transformData({
+      halls: [{
+        "id": 5450,
+        "hall_name": "Зал 10",
+        "hall_rows": 10,
+        "hall_places": 10,
+        "hall_config": [
+          ["disabled", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "disabled"],
+          ["standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart"],
+          ["standart", "standart", "standart", "standart", "vip", "vip", "standart", "standart", "standart", "standart"],
+          ["standart", "standart", "standart", "vip", "vip", "vip", "vip", "standart", "standart", "standart"],
+          ["standart", "standart", "standart", "vip", "vip", "vip", "vip", "standart", "standart", "standart"],
+          ["standart", "standart", "standart", "vip", "vip", "vip", "vip", "standart", "standart", "standart"],
+          ["standart", "standart", "standart", "vip", "vip", "vip", "vip", "standart", "standart", "standart"],
+          ["standart", "standart", "standart", "vip", "vip", "vip", "vip", "standart", "standart", "standart"],
+          ["standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart"],
+          ["standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart", "standart"]
+        ],
+        "hall_price_standart": 300,
+        "hall_price_vip": 450,
+        "hall_open": 0
+      }],
+      films: [{
+        "id": 1722,
+        "film_name": "Фильм Мстители: Война бесконечности смотреть онлайн",
+        "film_duration": 149,
+        "film_description": "Спустя два года после битвы в Лейпциге и разрушения Асгарда, супергерои узнают, что безумный титан Танос намерен получить Камни Бесконечности — мощнейшие артефакты во вселенной.",
+        "film_origin": "США",
+        "film_poster": "https://shfe-diplom.neto-server.ru/storage/app/img/posters/Jr09jQQ3glEEkMbWtOJlrETUg4iEIczp3wFS9wV4.png"
+      }],
+      seances: [{
+        "id": 3640,
+        "seance_hallid": 5450,
+        "seance_filmid": 1722,
+        "seance_time": "16:50"
+      }]
+    });
   }
 
   // === ТРАНСФОРМАЦИЯ ДАННЫХ ===
@@ -286,15 +288,13 @@ class CinemaAPI {
       title: this.decodeUnicode(film.film_name),
       description: film.film_description ? this.decodeUnicode(film.film_description) : '',
       duration: parseInt(film.film_duration) || 0,
-      genre: film.film_genre || '',
       country: this.decodeUnicode(film.film_origin),
-      ageRating: film.film_age_rating || '',
       posterUrl: film.film_poster || 'https://via.placeholder.com/300x450?text=No+Poster',
+      // Сохраняем оригинальные поля для совместимости
       film_name: this.decodeUnicode(film.film_name),
       film_description: film.film_description ? this.decodeUnicode(film.film_description) : '',
       film_duration: film.film_duration,
       film_origin: this.decodeUnicode(film.film_origin),
-      film_age_rating: film.film_age_rating,
       film_poster: film.film_poster
     })) || [];
     
@@ -313,23 +313,27 @@ class CinemaAPI {
       return {
         id: hall.id,
         name: this.decodeUnicode(hall.hall_name),
-        hall_name: this.decodeUnicode(hall.hall_name),
         rows: rows,
         cols: cols,
+        vipRows: vipRows,
+        isOpen: hall.hall_open === 1,
+        config: config,
+        priceStandard: parseInt(hall.hall_price_standart) || 0,
+        priceVip: parseInt(hall.hall_price_vip) || 0,
+        // Сохраняем оригинальные поля
+        hall_name: this.decodeUnicode(hall.hall_name),
         hall_rows: rows,
         hall_places: cols,
-        vipRows: vipRows,
-        hall_open: parseInt(hall.hall_open) || 0,
         hall_config: config,
         hall_price_standart: parseInt(hall.hall_price_standart) || 0,
         hall_price_vip: parseInt(hall.hall_price_vip) || 0,
-        priceStandard: parseInt(hall.hall_price_standart) || 0,
-        priceVip: parseInt(hall.hall_price_vip) || 0
+        hall_open: hall.hall_open
       };
     }) || [];
     
     const seances = apiData.seances?.map(seance => {
       const hall = apiData.halls?.find(h => h.id === seance.seance_hallid);
+      const film = apiData.films?.find(f => f.id === seance.seance_filmid);
       
       return {
         id: seance.id,
@@ -338,6 +342,9 @@ class CinemaAPI {
         startTime: this.formatSeanceTime(seance.seance_time),
         priceStandard: parseInt(hall?.hall_price_standart) || 0,
         priceVip: parseInt(hall?.hall_price_vip) || 0,
+        movieTitle: film ? this.decodeUnicode(film.film_name) : '',
+        hallName: hall ? this.decodeUnicode(hall.hall_name) : '',
+        // Сохраняем оригинальные поля
         seance_filmid: seance.seance_filmid,
         seance_hallid: seance.seance_hallid,
         seance_time: seance.seance_time,
@@ -379,7 +386,6 @@ class CinemaAPI {
   }
 
   // === ОСТАЛЬНЫЕ МЕТОДЫ API ===
-  // (Используют тот же паттерн, что и выше)
   
   async getHalls() {
     const result = await this.getAllData();
@@ -573,36 +579,70 @@ class CinemaAPI {
     });
   }
 
-  async bookTickets(bookingData) {
-    const formData = new URLSearchParams();
-    formData.append('seanceId', bookingData.seanceId.toString());
-    formData.append('ticketDate', bookingData.ticketDate);
-    
-    const ticketsJSON = JSON.stringify(bookingData.tickets);
-    formData.append('tickets', ticketsJSON);
+async bookTickets(bookingData) {
+  console.log('Booking data:', bookingData);
+  
+  const formData = new URLSearchParams();
+  formData.append('seanceId', bookingData.seanceId.toString());
+  formData.append('ticketDate', bookingData.ticketDate);
+  
+  // Важно: параметр должен быть 'tickets', а не 'ticketsJSON'
+  const ticketsJSON = JSON.stringify(bookingData.tickets);
+  console.log('Tickets JSON:', ticketsJSON);
+  formData.append('tickets', ticketsJSON);
 
-    return this.request('/ticket', {
+  try {
+    console.log('Sending booking request with formData:', Object.fromEntries(formData));
+    
+    const result = await this.request('/ticket', {
       method: 'POST',
       body: formData,
     });
+    
+    console.log('Booking result:', result);
+    
+    // API может возвращать результат в разных форматах
+    if (result && result.tickets && Array.isArray(result.tickets)) {
+      return result;
+    } else if (result && Array.isArray(result)) {
+      // Если возвращается просто массив билетов
+      return { tickets: result };
+    } else if (result && result.success === false && result.error) {
+      // Если есть ошибка, пробрасываем её
+      const decodedError = this.decodeUnicode(result.error);
+      throw new Error(decodedError);
+    } else {
+      throw new Error('Неизвестный формат ответа при покупке билетов');
+    }
+    
+  } catch (error) {
+    console.error('Booking error:', error);
+    
+    // Декодируем Unicode в сообщении об ошибке
+    let errorMessage = error.message;
+    if (errorMessage.includes('\\u')) {
+      errorMessage = this.decodeUnicode(errorMessage);
+    }
+    
+    // Проверяем, не занято ли место
+    if (errorMessage.includes('Не возможно забронировать место')) {
+      const match = errorMessage.match(/ряд (\d+) место (\d+)/);
+      if (match) {
+        throw new Error(`Не возможно забронировать место (ряд ${match[1]} место ${match[2]}) уже занято`);
+      }
+    }
+    
+    throw new Error(errorMessage);
   }
+}
 
   async getHallConfig(seanceId, date) {
     try {
-      const url = `${this.baseURL}/hallconfig?seanceId=${seanceId}&date=${date}`;
-      
-      const response = await fetch(url, {
+      const result = await this.request(`/hallconfig?seanceId=${seanceId}&date=${date}`, {
         method: 'GET',
-        mode: 'cors',
-        credentials: 'omit',
       });
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      return data.result || data;
+      return result || [];
       
     } catch (error) {
       console.error('Error in getHallConfig:', error);
@@ -653,56 +693,19 @@ class CinemaAPI {
     }
   }
 
-  formatTimeForAPI(isoTime) {
-    if (!isoTime) return '';
-    
+  // Метод для выхода (очистки токена)
+  logout() {
+    this.token = null;
     try {
-      const date = new Date(isoTime);
-      const hours = date.getHours().toString().padStart(2, '0');
-      const minutes = date.getMinutes().toString().padStart(2, '0');
-      return `${hours}:${minutes}`;
-    } catch (error) {
-      if (typeof isoTime === 'string' && isoTime.includes(':')) {
-        return isoTime;
-      }
-      return '';
+      localStorage.removeItem('cinema_token');
+    } catch (e) {
+      console.log('Failed to remove token from localStorage:', e);
     }
   }
 
-  async getTakenSeatsFromTickets(seanceId) {
-    try {
-      const date = new Date().toISOString().split('T')[0];
-      
-      const response = await fetch(
-        `${this.baseURL}/ticket?seanceId=${seanceId}&date=${date}`, 
-        { 
-          method: 'GET',
-          mode: 'cors',
-          credentials: 'omit',
-        }
-      );
-      
-      const data = await response.json();
-      const tickets = data.result || data || [];
-      
-      return tickets.map(ticket => ({
-        row: ticket.ticket_row,
-        seat: ticket.ticket_place,
-        id: ticket.id,
-        type: 'taken'
-      }));
-      
-    } catch (error) {
-      console.error('Error getting taken seats from tickets:', error);
-      return [];
-    }
-  }
-
-  // Включение/выключение мок-режима
-  setMockMode(enabled) {
-    this.useMock = enabled;
-    this.isOnline = !enabled;
-    console.log(`Mock mode ${enabled ? 'enabled' : 'disabled'}`);
+  // Проверка авторизации
+  isAuthenticated() {
+    return !!this.token;
   }
 }
 

@@ -90,22 +90,40 @@ const handleConfirmBooking = async () => {
   setError(null);
   
   try {
-    // Подготавливаем данные для API
-    const bookingData = prepareBookingData();
+    // Получаем занятые места перед покупкой
+    const takenSeats = await cinemaAPI.getTakenSeats(seance?.id || seance?.seance_id);
     
-    console.log('Отправка данных покупки билетов:', bookingData);
+    // Проверяем, не выбраны ли уже занятые места
+    const selectedSeatsData = prepareBookingData();
+    const conflictedSeats = [];
+    
+    selectedSeatsData.tickets.forEach(ticket => {
+      const isTaken = takenSeats.some(taken => 
+        taken.row === ticket.row && taken.seat === ticket.place
+      );
+      
+      if (isTaken) {
+        conflictedSeats.push(`ряд ${ticket.row} место ${ticket.place}`);
+      }
+    });
+    
+    if (conflictedSeats.length > 0) {
+      throw new Error(`Места уже заняты: ${conflictedSeats.join(', ')}. Пожалуйста, выберите другие места.`);
+    }
+    
+    console.log('Отправка данных покупки билетов:', selectedSeatsData);
     
     // Проверяем наличие обязательных данных
-    if (!bookingData.seanceId || bookingData.seanceId === 0) {
+    if (!selectedSeatsData.seanceId || selectedSeatsData.seanceId === 0) {
       throw new Error('Не указан ID сеанса');
     }
     
-    if (bookingData.tickets.length === 0) {
+    if (selectedSeatsData.tickets.length === 0) {
       throw new Error('Не выбраны места');
     }
 
     // Отправляем запрос на покупку билетов через API
-    const result = await cinemaAPI.bookTickets(bookingData);
+    const result = await cinemaAPI.bookTickets(selectedSeatsData);
     
     console.log('Ответ от API покупки билетов:', result);
 
@@ -149,7 +167,7 @@ const handleConfirmBooking = async () => {
     
     // ВАЖНО: Сохраняем информацию о забронированных местах в localStorage
     // чтобы HallPage мог их отобразить как занятые
-    const seanceId = bookingData.seanceId;
+    const seanceId = selectedSeatsData.seanceId;
     const bookedSeatsKey = `booked_seats_${seanceId}`;
     
     // Получаем текущие забронированные места для этого сеанса
@@ -206,6 +224,8 @@ const handleConfirmBooking = async () => {
       } else {
         errorMessage = 'Некоторые выбранные места уже заняты. Пожалуйста, выберите другие места.';
       }
+    } else if (err.message.includes('Места уже заняты:')) {
+      errorMessage = err.message;
     } else if (err.message.includes('Не указан ID сеанса')) {
       errorMessage = 'Ошибка данных сеанса. Вернитесь на главную страницу.';
     } else if (err.message.includes('Не выбраны места')) {
@@ -220,7 +240,8 @@ const handleConfirmBooking = async () => {
     
     // Предлагаем вернуться к выбору мест
     setTimeout(() => {
-      if (err.message.includes('Не возможно забронировать место')) {
+      if (err.message.includes('Не возможно забронировать место') || 
+          err.message.includes('Места уже заняты:')) {
         if (window.confirm('Хотите вернуться к выбору других мест?')) {
           navigate(-1);
         }
