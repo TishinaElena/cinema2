@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'; // Измените BrowserRouter на HashRouter
 import { DataProvider } from './contexts/DataContext';
 import './index.css';
 
@@ -17,14 +17,13 @@ import PrivateRoute from './components/PrivateRoute';
 function App() {
   return (
     <DataProvider>
-      <Router>
+      <Router> {/* Теперь это HashRouter */}
         <Routes>
           {/* Публичные маршруты */}
           <Route path="/" element={<MainPage />} />
           <Route path="/hall/:seanceId" element={<HallPage />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/ticket/:bookingId" element={<TicketPage />} />
-          
           
           {/* Админские маршруты */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
