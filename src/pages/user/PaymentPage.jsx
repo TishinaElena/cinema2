@@ -258,181 +258,104 @@ const handleConfirmBooking = async () => {
   const seanceTime = formatTime(seance?.startTime || seance?.seance_time);
 
   return (
-    <Container className="py-5">
-      <Card className="shadow-lg border-0">
-        <Card.Header className="bg-primary text-white py-3">
-          <h3 className="mb-0">
-            <i className="bi bi-credit-card me-2"></i>
-            Оплата билетов
-          </h3>
-        </Card.Header>
-        
-        <Card.Body className="p-4">
-          {/* Информация о заказе */}
-          <Card className="mb-4 border-success">
-            <Card.Header className="bg-success text-white">
-              <h5 className="mb-0">
-                <i className="bi bi-ticket-perforated me-2"></i>
-                Детали заказа
-              </h5>
-            </Card.Header>
-            <Card.Body>
-              <ListGroup variant="flush">
-                <ListGroup.Item>
-                  <Row>
-                    <Col xs={4} className="fw-bold">Фильм:</Col>
-                    <Col xs={8}>{movieTitle}</Col>
-                  </Row>
-                </ListGroup.Item>
-                
-                <ListGroup.Item>
-                  <Row>
-                    <Col xs={4} className="fw-bold">Места:</Col>
-                    <Col xs={8}>
-                      <div className="d-flex flex-wrap gap-2">
-                        {selectedSeats.map(seatId => {
-                          const row = Math.floor((seatId - 1) / hallCols) + 1;
-                          const seat = ((seatId - 1) % hallCols) + 1;
-                          // Безопасная проверка vipRows
-                          const isVip = Array.isArray(vipRows) ? vipRows.includes(row) : false;
-                          const price = isVip ? vipPrice : standardPrice;
-                          
-                          return (
-                            <Badge 
-                              key={seatId} 
-                              bg={isVip ? 'warning' : 'info'} 
-                              className="p-2"
-                            >
-                              Ряд {row}, Место {seat} - {price}₽
-                            </Badge>
-                          );
-                        })}
-                      </div>
-                    </Col>
-                  </Row>
-                </ListGroup.Item>
-                
-                <ListGroup.Item>
-                  <Row>
-                    <Col xs={4} className="fw-bold">Зал:</Col>
-                    <Col xs={8}>{hallName}</Col>
-                  </Row>
-                </ListGroup.Item>
-                
-                <ListGroup.Item>
-                  <Row>
-                    <Col xs={4} className="fw-bold">Время сеанса:</Col>
-                    <Col xs={8}>{seanceTime}</Col>
-                  </Row>
-                </ListGroup.Item>
-                
-                <ListGroup.Item>
-                  <Row>
-                    <Col xs={4} className="fw-bold">Количество мест:</Col>
-                    <Col xs={8}>{selectedSeats.length}</Col>
-                  </Row>
-                </ListGroup.Item>
-                
-                <ListGroup.Item className="bg-light">
-                  <Row>
-                    <Col xs={4} className="fw-bold fs-5">Итого к оплате:</Col>
-                    <Col xs={8} className="fs-4 fw-bold text-success">
-                      {totalPrice} ₽
-                    </Col>
-                  </Row>
-                </ListGroup.Item>
-              </ListGroup>
-            </Card.Body>
-          </Card>
+    <Container className="payment-page">
+      <header className="user-page__header">
+        <div className="user-page__logo">
+          <span className="user-page__logo-bold">ИДЁМ</span>
+          <span className="user-page__logo-thin">В</span>
+          <span className="user-page__logo-bold">КИНО</span>
+        </div>
+      </header>
+      
+      <main className="payment-page__main">
+        <Card className="content_card">
+          <Card.Body>
+            <h2 className="payment-card__title">ВЫ ВЫБРАЛИ БИЛЕТЫ:</h2>
+            
+            <div className="payment-card__info">
+              <div className="payment-card__info-item">
+                <span className="payment-card__label">На фильм: </span>
+                <span className="payment-card__value fw-bold">{movieTitle}</span>
+              </div>
+              
+              <div className="payment-card__info-item">
+                <span className="payment-card__label">Места: </span>
+                <span className="payment-card__value fw-bold">
+                  {selectedSeats.map(seatId => {
+                    const row = Math.floor((seatId - 1) / hallCols) + 1;
+                    const seat = ((seatId - 1) % hallCols) + 1;
+                    const isVip = Array.isArray(vipRows) ? vipRows.includes(row) : false;
+                    const price = isVip ? vipPrice : standardPrice;
+                    
+                    return (
+                      <                 span
+                      >
+                        ряд {row}, место {seat};
+                      </span>
+                    );
+                  })}
+                </span>
+              </div>
+              
+              <div className="payment-card__info-item">
+                <span className="payment-card__label">В зале: </span>
+                <span className="payment-card__value fw-bold">{hallName}</span>
+              </div>
+              
+              <div className="payment-card__info-item">
+                <span className="payment-card__label">Начало сеанса: </span>
+                <span className="payment-card__value fw-bold">{seanceTime}</span>
+              </div>
+              
+              <div className="payment-card__info-item">
+                <span className="payment-card__label">Стоимость: </span>
+                <span className="payment-card__value payment-card__price fw-bold">{totalPrice} рублей</span>
+              </div>
+            </div>
 
-          {/* Кнопка оплаты */}
-          <div className="text-center mb-4">
-            <Button 
-              variant="success" 
-              size="lg" 
-              className="px-5 py-3"
-              onClick={handleConfirmBooking}
-              disabled={loading || selectedSeats.length === 0}
-            >
-              {loading ? (
-                <>
-                  <Spinner
-                    as="span"
-                    animation="border"
-                    size="sm"
-                    role="status"
-                    aria-hidden="true"
-                    className="me-2"
-                  />
-                  Покупка билетов...
-                </>
-              ) : (
-                <>
-                  <i className="bi bi-check-circle me-2"></i>
-                  Купить билеты
-                </>
+            <div className="payment-card__actions text-center mb-4">
+              <Button 
+                variant="primary" 
+                size="lg" 
+                className="button"
+                onClick={handleConfirmBooking}
+                disabled={loading || selectedSeats.length === 0}
+              >
+                {loading ? (
+                  <>
+                    <Spinner
+                      as="span"
+                      animation="border"
+                      size="sm"
+                      role="status"
+                      aria-hidden="true"
+                      className="me-2"
+                    />
+                    Покупка билетов...
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-ticket-detailed me-2"></i>
+                    ПОЛУЧИТЬ КОД БРОНИРОВАНИЯ
+                  </>
+                )}
+              </Button>
+              
+              {error && (
+                <Alert variant="danger" className="payment-card__alert mt-3">
+                  <i className="bi bi-exclamation-triangle me-2"></i>
+                  {error}
+                </Alert>
               )}
-            </Button>
-            
-            {error && (
-              <Alert variant="danger" className="mt-3">
-                <i className="bi bi-exclamation-triangle me-2"></i>
-                {error}
-              </Alert>
-            )}
-          </div>
+            </div>
 
-          {/* Информация */}
-          <Card className="border-info">
-            <Card.Header className="bg-info text-white">
-              <h5 className="mb-0">
-                <i className="bi bi-info-circle me-2"></i>
-                Информация
-              </h5>
-            </Card.Header>
-            <Card.Body>
-              <ul className="list-unstyled mb-0">
-                <li className="mb-2">
-                  <i className="bi bi-check-circle text-success me-2"></i>
-                  Билеты будут зарезервированы на 15 минут
-                </li>
-                <li className="mb-2">
-                  <i className="bi bi-check-circle text-success me-2"></i>
-                  QR-код билета отобразится на следующей странице
-                </li>
-                <li className="mb-2">
-                  <i className="bi bi-check-circle text-success me-2"></i>
-                  Покажите QR-код контроллёру у входа в зал
-                </li>
-                <li>
-                  <i className="bi bi-check-circle text-success me-2"></i>
-                  Приятного просмотра!
-                </li>
-              </ul>
-            </Card.Body>
-          </Card>
-
-          {/* Кнопка назад */}
-          <div className="text-center mt-4">
-            <Button 
-              variant="outline-secondary" 
-              onClick={() => navigate(-1)}
-              className="me-2"
-            >
-              <i className="bi bi-arrow-left me-1"></i>
-              Вернуться к выбору мест
-            </Button>
-            
-            <Button 
-              variant="outline-primary" 
-              onClick={() => navigate('/')}
-            >
-              <i className="bi bi-house me-1"></i>
-              На главную
-            </Button>
-          </div>
-        </Card.Body>
-      </Card>
+            <div className="payment-card__notice">
+              После оплаты билет будет доступен в этом окне, а также придёт вам на почту. 
+              Покажите QR-код нашему контроллеру у входа в зал. Приятного просмотра!
+            </div>  
+          </Card.Body>
+        </Card>
+      </main>
     </Container>
   );
 };

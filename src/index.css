@@ -1,38 +1,88 @@
-/* Основные стили */
+/* ===== ПОДКЛЮЧЕНИЕ ШРИФТА ===== */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap');
+
+:root {
+  --card-bg-color:rgba(241, 235, 230, 0.95);
+  --button-bg-color: rgba(22, 166, 175, 1);
+  --main-text-color: #000000;
+}
+
+/* ===== БАЗОВЫЕ СТИЛИ ===== */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Roboto', sans-serif !important;
 }
 
+/* Основной шрифт для всего проекта */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+    sans-serif !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-image: url('/public/images/cinema-bg.jpg'); /* Путь к изображению */
-  background-size: cover; /* Растягивает изображение на весь экран */
-  background-position: center; /* Центрирует изображение */
-  background-repeat: no-repeat; /* Не повторяет изображение */
-  background-attachment: fixed; /* Фон фиксируется при прокрутке */
+  background-image: url('/public/images/cinema-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: #333;
   min-height: 100vh;
 }
 
+/* Для всех текстовых элементов */
+h1, h2, h3, h4, h5, h6,
+p, span, a, li, td, th,
+button, input, textarea, select,
+label, small, strong, em {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* Для Bootstrap компонентов */
+.btn, .form-control, .form-label, 
+.alert, .card, .modal, .navbar,
+.dropdown-menu, .badge, .spinner-border,
+.nav-link, .table {
+  font-family: 'Roboto', sans-serif !important;
+  
+}
+
+.button {
+  height: 40px;
+  background: var(--button-bg-color) !important;
+  border:  1px var(--button-bg-color) !important;
+  border-radius: 3px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px px rgba(0, 0, 0, 0.12) !important;
+}
+
+.content_card{
+  background: var(--card-bg-color) !important;
+  border:  1px var(--card-bg-color) !important;
+  border-radius: 2px !important;
+  }
+
+.card__title{
+  font-weight: 700;
+  color: var(--main-text-color);
+  font-size: 16px;
+  line-height: 18px;
+}
 
 
 
-/*Мои правки*/
-.userpage-header {
+.user-page__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  padding: 14px 0px;
 }
 
-.logo-custom {
-  font-family: 'Roboto', sans-serif;
+.user-page__logo {
+ 
   font-size: 34px;
   line-height: 39px;
   letter-spacing: 0%;
@@ -42,472 +92,644 @@ body {
   color: white;
 }
 
-.logo-bold {
+.user-page__logo-bold {
   font-weight: 900;
 }
 
-.logo-thin {
+.user-page__logo-thin {
   font-weight: 100;
 }
 
-header .sign-in-button {
-  background-color: #16A6AF;
-  color: #ffffff;
-  border: 2px solid #16A6AF;
-  font-size: 14px;
-  border-radius: 3px;
+
+
+/* ===== СТИЛИ ДЛЯ ИКОНОК ===== */
+.bi {
+  vertical-align: middle;
 }
 
-.date-picker {
+.bi-clock,
+.bi-film,
+.bi-globe,
+.bi-door-open,
+.bi-info-circle {
+  color: #16A6AF;
+}
+
+
+/* ===== ОСНОВНЫЕ СТИЛИ ===== */
+.main-page {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.hall-page {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.payment-page {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.sign-in-button {
+  padding: 12px;
+}
+
+
+/* ===== DATE PICKER СТИЛИ ===== */
+.main-page__date-picker {
   width: 100%;
+  margin-bottom: 30px;
 }
 
-.date-picker .days-container {
+.date-picker__days {
   display: flex;
   align-items: flex-end;
 }
 
-.date-picker .day-button {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.date-picker__day-btn {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  transition: all 0.2s ease;
   border-radius: 2px;
   margin: 0 1px;
   flex: 1;
   text-align: left;
   cursor: pointer;
   border: 1px solid #F1EBE6;
-  background-color: #F1EBE6; /* Бежевый фон для неактивных */
+  background-color: rgba(248, 249, 250, 0.9);
   font-size: 12px;
   color: #000000;
-  padding: 16px 8px;
+  padding: 10px 20px;
   height: 48px;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.12);
 }
 
-.date-picker .day-button.active {
-  background-color: #ffffff !important; /* Белый фон для активной */
+.date-picker__day-btn--active {
+  background-color: #ffffff;
   color: #000000;
-  
   padding: 1rem 0.5rem;
   height: 52px;
-  
 }
 
-.date-picker .day-button .day-name {
+.date-picker__day-name {
   font-weight: 400;
   margin-bottom: 1px;
 }
 
-.date-picker .day-button.active .date-text {
-  color: rgba(0, 0, 0, 1) !important;
-   font-weight: 700;
-}
-
-.date-picker .day-button.active .day-name {
-   font-weight: 700;
-}
-
-.date-picker .day-button:not(.active) .date-text {
-  color: #000000 !important; 
-}
-
-/* Основные стили для карточек фильмов */
-.main-page-container {
-  padding-top: 2rem;
-  padding-bottom: 2rem;
-}
-
-/* Стили для карточки фильма */
-.movie-card {
-  border-radius: 12px !important;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border: 1px solid #e9ecef;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1.5rem;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.movie-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.05);
-}
-
-/* Стили для текста в карточке */
-.movie-title {
-  font-family: 'Roboto', sans-serif;
+.date-picker__day-btn--active .date-picker__date-text {
+  color: rgba(0, 0, 0, 1);
   font-weight: 700;
-  color: #2c3e50;
-  margin-bottom: 0.75rem;
-  font-size: 1.5rem;
-  line-height: 1.3;
 }
 
-.movie-meta {
-  font-family: 'Roboto', sans-serif;
-  font-size: 0.9rem;
-  color: #6c757d;
-  margin-bottom: 1rem;
+.date-picker__day-btn--active .date-picker__day-name {
+  font-weight: 700;
 }
 
-.movie-meta i {
-  color: #16A6AF;
-  margin-right: 0.25rem;
+.date-picker__day-btn:not(.date-picker__day-btn--active) .date-picker__date-text {
+  color: #000000;
 }
 
-.movie-description {
-  font-family: 'Roboto', sans-serif;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: #495057;
-  margin-bottom: 0;
+/* ===== MOVIE CARDS СТИЛИ ===== */
+.movie-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
 }
 
-/* Стили для постера фильма */
-.movie-poster {
+.movie-card__content {
+  display: flex;
+  flex-direction: column;
+}
+
+.movie-card__info {
+  display: flex;
+  padding: 15px 15px 0px 15px;
+}
+
+.movie-card__poster-img {
   width: 125px;
   height: 175px;
   object-fit: cover;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Стили для секции сеансов */
-.sessions-section {
-  background-color: #f8f9fa;
-  border-top: 1px solid #e9ecef;
-  padding: 1.25rem;
-}
-
-.hall-name {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 0.75rem;
-  font-size: 1.1rem;
-}
-
-.hall-name i {
-  color: #16A6AF;
-  margin-right: 0.5rem;
-}
-
-/* Стили для кнопок сеансов */
-.session-button {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 500;
-  min-width: 85px;
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  border: 2px solid #16A6AF;
-  color: #16A6AF;
-  background-color: white;
-  transition: all 0.2s ease;
-  font-size: 0.9rem;
-}
-
-.session-button:hover {
-  background-color: #16A6AF;
-  color: white;
-  transform: scale(1.05);
-  border-color: #16A6AF;
-}
-
-.session-button:active {
-  transform: scale(0.98);
-}
-
-/* Стили для панели дат */
-.date-navigation {
-  margin-bottom: 2rem;
-}
-
-.date-button {
-  font-family: 'Roboto', sans-serif;
-  padding: 0.75rem 1rem;
-  border: 2px solid #e9ecef;
-  border-radius: 10px;
-  background: white;
-  cursor: pointer;
-  text-align: center;
-  min-width: 85px;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.date-button:hover {
-  border-color: #16A6AF;
-  background-color: #f8f9fa;
-}
-
-.date-button.active {
-  background-color: #16A6AF;
-  border-color: #16A6AF;
-  color: white;
-}
-
-.day-name {
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-  font-size: 0.9rem;
-}
-
-.date-text {
-  font-size: 0.85rem;
-  opacity: 0.9;
-}
-
-/* Стили для логотипа */
-.cinema-logo {
-  font-family: 'Roboto', sans-serif;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #2c3e50;
-}
-
-.logo-bold {
-  font-weight: 900;
-}
-
-.logo-thin {
-  font-weight: 300;
-}
-
-/* Стили для кнопки входа */
-.login-button {
-  font-family: 'Roboto', sans-serif;
-  background-color: #16A6AF;
-  border-color: #16A6AF;
-  border-radius: 8px;
-  padding: 0.5rem 1.5rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.login-button:hover {
-  background-color: #128a92;
-  border-color: #128a92;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(22, 166, 175, 0.2);
-}
-
-/* Адаптивные стили */
-@media (max-width: 768px) {
-  .movie-poster {
-    width: 100px;
-    height: 140px;
-  }
-  
-  .movie-title {
-    font-size: 1.25rem;
-  }
-  
-  .session-button {
-    min-width: 75px;
-    padding: 0.4rem 0.6rem;
-    font-size: 0.85rem;
-  }
-  
-  .date-button {
-    min-width: 70px;
-    padding: 0.6rem 0.8rem;
-  }
-}
-
-/* Основные стили для карточек фильмов */
-.movie-schedule-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.no-sessions-alert {
-  margin-top: 2rem;
-  border-radius: 8px;
-  background-color: #e7f6f7;
-  border-color: #16A6AF;
-  color: #0d7377;
-}
-
-.no-sessions-alert i {
-  color: #16A6AF;
-}
-
-/* Карточка фильма */
-.movie-card {
-  border-radius: 2px !important;
-  background: linear-gradient(135deg, #F1EBE6F2 95%, #F1EBE6F2 95%);
-  border: 1px solid #e9ecef;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  margin-bottom: 1.5rem;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-/* Внутреннее содержимое карточки */
-.movie-card-content {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Секция с информацией о фильме */
-.movie-info-section {
-  display: flex;
-  padding: 1.5rem;
-  border-bottom: 1px solid #f1f3f5;
-}
-
-/* Контейнер постера */
-.movie-poster-container {
-  flex-shrink: 0;
-  margin-right: 1.5rem;
-}
-
-.movie-poster {
-  width: 125px;
-  height: 200px;
-  object-fit: cover;
   border-radius: 0px;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Детали фильма */
-.movie-details {
-  flex-grow: 1;
+.movie-card__details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 15px;
 }
 
-.movie-title {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 700;
-  color: #000000;
-  margin-bottom: 0.75rem;
-  font-size: 16px;
-  line-height: 18px;
-}
-
-.movie-meta {
-  font-family: 'Roboto', sans-serif;
+.movie-card__meta {
   font-size: 14px;
   font-weight: 300;
-  color: #000000;
-  margin-bottom: 1rem;
+  color: var(--main-text-color);
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  margin-bottom: 8px;
 }
 
-.meta-divider {
-  color: #000000;
-  font-weight: 300px;
-}
-
-.movie-description {
-  font-family: 'Roboto', sans-serif;
+.movie-card__description {
   font-size: 14px;
   font-weight: 400;
   line-height: 16px;
-  color: #000000;
-  margin: 0;
+  color: var(--main-text-color);
+  margin-bottom: 0px;
 }
 
-/* Секция сеансов */
-.sessions-section {
-  padding: 1.5rem;
-  background-color: #F1EBE6F2;
+/* ===== SESSIONS СТИЛИ ===== */
+.movie-card__sessions {
+  padding: 0px 0px 15px 15px;
 }
 
-/* Сеансы по залам */
-.hall-sessions {
-  margin-bottom: 1.25rem;
+.movie-sessions__hall {
+  margin-bottom: 20px;
 }
 
-.hall-sessions:last-child {
+.movie-sessions__hall:last-child {
   margin-bottom: 0;
 }
 
-.hall-name {
-  font-family: 'Roboto', sans-serif;
+.movie-sessions__hall-name {
   font-weight: 700;
   color: #000000;
-  margin-bottom: 0.75rem;
+  margin-bottom: 7px;
   font-size: 16px;
   display: flex;
   align-items: center;
 }
 
-/* Список сеансов */
-.sessions-list {
+.movie-sessions__list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 4px;
 }
 
-/* Кнопки сеансов */
-.session-button {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 400;
-  min-width: 85px;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: 2px solid #ffffff;
-  color: #ffffff;
-  background-color: white;
-  transition: all 0.2s ease;
-  font-size: 15px;
+.movie-sessions__time-btn {
+  display: inline-block;
+  background-color: #ffffff;
+  border-radius: 2px;
+  cursor: pointer;
   text-align: center;
+  width: 53px;
+  height: 33px;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 17px;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e0e0e0;
 }
 
-.session-button:hover {
-  background-color: #5b1959;
-  color: white;
+.movie-sessions__time-btn:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(22, 166, 175, 0.2);
 }
 
-.session-button:active {
-  transform: translateY(0);
+/* ===== LOADING & ERROR СТИЛИ ===== */
+.main-page__loading {
+  text-align: center;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
 }
 
-/* Адаптивные стили */
+.main-page__loading-text {
+  margin-top: 1rem;
+}
+
+.main-page__error {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.main-page__no-sessions {
+  color: #000000 !important;
+  font-size: 14px;
+}
+
+
+
+/* ===== АДАПТИВНЫЕ СТИЛИ ===== */
 @media (max-width: 768px) {
-  .movie-info-section {
+  .movie-card__info {
     flex-direction: column;
-    padding: 1.25rem;
+    padding: 1rem;
   }
   
-  .movie-poster-container {
+  .movie-card__poster {
     margin-right: 0;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
     align-self: center;
   }
   
-  .movie-poster {
+  .movie-card__poster-img {
     width: 120px;
     height: 170px;
   }
   
-  .movie-title {
-    font-size: 1.3rem;
+  .movie-card__title {
     text-align: center;
   }
   
-  .movie-meta {
+  .movie-card__meta {
     justify-content: center;
     gap: 0.5rem;
   }
   
-  .sessions-section {
-    padding: 1.25rem;
+  .movie-card__sessions {
+    padding: 1rem;
   }
   
-  .session-button {
-    min-width: 75px;
-    padding: 0.4rem 0.75rem;
+  .movie-sessions__time-btn {
+    width: 70px;
+    height: 32px;
+    font-size: 14px;
+    line-height: 32px;
+  }
+  
+  .date-picker__day-btn {
+    padding: 0.75rem 0.25rem;
+    font-size: 11px;
+  }
+  
+  .main-page__logo {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .movie-sessions__list {
+    gap: 0.25rem;
+  }
+  
+  .movie-sessions__time-btn {
+    width: 65px;
+    height: 30px;
+    font-size: 13px;
+    line-height: 30px;
+  }
+  
+  .date-picker__days {
+    flex-wrap: wrap;
+  }
+  
+  .date-picker__day-btn {
+    flex: 0 0 calc(100% / 4 - 2px);
+    margin-bottom: 4px;
+  }
+
+  
+}
+
+/* ===== СТИЛИ ДЛЯ СТРАНИЦЫ ЗАЛА ===== */
+
+/* Контейнер страницы зала */
+.hall-page__container {
+  position: relative;
+}
+
+/* Информация о фильме */
+.hall-page__movie-info {
+  padding: 15px 15px 15px 15px;
+}
+
+/* Экран зала */
+.hall-page__screen {
+  font-weight: 500;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #343a40 0%, #495057 100%) !important;
+}
+
+/* Контейнер для кресел */
+.hall-page__layout {
+  margin: 0 auto;
+  max-width: 800px;
+}
+
+/* Ряд кресел */
+.hall-page__row {
+  min-height: 24px;
+}
+
+/* Контейнер для кресел в ряду */
+.hall-page__seats-container {
+  max-width: 800px;
+  min-width: 300px;
+}
+
+/* Базовый стиль кресла */
+.hall-page__seat {
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  border: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  user-select: none;
+}
+
+/* Стандартное кресло */
+.hall-page__seat--standard {
+  background-color: #ffffff;
+  color: #212529;
+  border: 1px solid #525252;
+}
+
+.hall-page__seat--standard:hover {
+  background-color: #f8f9fa;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* VIP кресло */
+.hall-page__seat--vip {
+  background-color: #F9953A;
+  border: 1px solid #525252;
+}
+
+.hall-page__seat--vip:hover {
+  background-color: #F9953A;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+}
+
+/* Выбранное кресло */
+.hall-page__seat--selected {
+  background-color: #25C4CE;
+  border: 1px solid #25C4CE;
+  box-shadow: 2px 2px 5px rgba(37, 196, 206, 0.3);
+}
+
+.hall-page__seat--selected:hover {
+  background-color: #25C4CE;
+  transform: scale(1.05);
+}
+
+/* Занятое/заблокированное кресло */
+.hall-page__seat--occupied {
+  background-color: #00000000;
+  border: 1px solid #525252;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hall-page__seat--occupied:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Легенда */
+.hall-page__legend {
+  margin-top: 2rem;
+}
+
+.hall-page__legend-container {
+  width: 350px;
+  max-width: 100%;
+}
+
+.hall-page__legend-row {
+  margin-bottom: 1rem;
+}
+
+.hall-page__legend-row:last-child {
+  margin-bottom: 0;
+}
+
+.hall-page__legend-item {
+  width: 60%;
+}
+
+.hall-page__legend-item:last-child {
+  width: 40%;
+}
+
+/* Иконки легенды */
+.hall-page__legend-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hall-page__legend-icon--standard {
+  background-color: #ffffff;
+  border: 1px solid #525252;
+}
+
+.hall-page__legend-icon--vip {
+  background-color: #F9953A;
+  border: 1px solid #525252;
+}
+
+.hall-page__legend-icon--selected {
+  background-color: #25C4CE;
+  border: 1px solid #525252;
+}
+
+.hall-page__legend-icon--occupied {
+  background-color: #6c757d00;
+  opacity: 0.5;
+  color: #ffffff;
+  border: 1px solid #525252;
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Кнопка бронирования */
+.hall-page__booking-btn {
+  margin-bottom: 30px;
+}
+
+
+/* ===== АДАПТИВНЫЕ СТИЛИ ДЛЯ СТРАНИЦЫ ЗАЛА ===== */
+@media (max-width: 768px) {
+  .hall-page__container {
+    padding: 1rem !important;
+  }
+  
+  .hall-page__seat {
+    width: 36px;
+    height: 36px;
+    margin: 0 2px 4px !important;
+  }
+  
+  .hall-page__legend-container {
+    width: 320px;
+  }
+  
+  .hall-page__legend-item {
+    width: 65%;
+  }
+  
+  .hall-page__legend-item:last-child {
+    width: 35%;
+  }
+}
+
+@media (max-width: 576px) {
+  .hall-page__seat {
+    width: 32px;
+    height: 32px;
+    margin: 0 1px 3px !important;
+  }
+  
+  .hall-page__legend-container {
+    width: 280px;
+  }
+  
+  .hall-page__legend-row {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+  }
+  
+  .hall-page__legend-item {
+    width: 100%;
+    margin-bottom: 0.75rem;
+  }
+  
+  .hall-page__legend-item:last-child {
+    width: 100%;
+    margin-bottom: 0;
+  }
+  
+  .hall-page__legend-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Payment Page Styles */
+
+.payment-card__title {
+  text-align: left;
+  color: #C76F00;
+  font-weight: 700;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 5px dotted #C76F00;
+  font-size: 22px;
+}
+
+.payment-card__info-item {
+   font-size: 16px;
+}
+
+.payment-card__info-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 15px;
+}
+
+.payment-card__label {
+  color: #000000;
+  font-weight: 400;
+  flex-shrink: 0;
+  width: 180px;
+}
+
+.payment-card__value {
+  color: #000000;
+  text-align: right;
+  flex-grow: 1;
+  word-break: break-word;
+}
+
+.payment-card__price {
+  color: #000000;
+}
+
+.payment-card__button {
+  height: 40px;
+  background: rgba(22, 166, 175, 1) !important;
+  border:  1px rgba(22, 166, 175, 1) !important;
+  border-radius: 3px !important;
+  padding-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+
+
+.payment-card__alert {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 3px 10px rgba(220, 53, 69, 0.2);
+  animation: shake 0.5s ease-in-out;
+}
+
+.payment-card__notice {
+  padding: 15px 20px;
+  color: #000000;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 16px;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .payment-page__main {
+    padding: 20px 15px;
+  }
+  
+  .payment-card {
+    border-radius: 15px;
+  }
+  
+  .payment-card__title {
+    font-size: 1.5rem;
+  }
+  
+  .payment-card__info {
+    padding: 20px;
+  }
+  
+  .payment-card__info-item {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .payment-card__label {
+    width: 100%;
+  }
+  
+  .payment-card__value {
+    text-align: left;
+    width: 100%;
+  }
+  
+  .payment-card__button {
+    width: 100%;
+    padding: 15px 30px;
+  }
+}
+
+@media (max-width: 576px) {
+  .payment-card__title {
+    font-size: 1.3rem;
+  }
+  
+  .payment-card__info {
+    padding: 15px;
+  }
+  
+  .payment-card__notice {
+    padding: 12px 15px;
     font-size: 0.9rem;
   }
 }
@@ -515,385 +737,178 @@ header .sign-in-button {
 
 
 
+/* ===== Ticket Page Styles ===== */
 
-
-
-
-
-/* Стили для страницы зала */
-.hall-layout {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 20px;
+/* Ticket card container */
+.ticket-card {
+  background: rgba(241, 235, 230, 0.95) !important;
+  border-radius: 2px !important;
+  width: 100%;
+  margin: 30px auto;
+  overflow: hidden;
+  position: relative;
 }
 
-.screen {
-  text-align: center;
-  background: linear-gradient(to right, #333, #666, #333);
-  color: white;
-  padding: 15px;
-  margin: 20px 0;
-  border-radius: 4px;
-  font-weight: bold;
-  letter-spacing: 2px;
+.ticket-card__body {
+  padding: 40px;
 }
 
-.seats-container {
-  min-height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f9f9f9;
-  border-radius: 4px;
+/* Ticket header */
+.ticket-header {
+  text-align: left;
   margin-bottom: 20px;
+  border-bottom: 5px dotted #C76F00;
+  position: relative;
 }
 
-.booking-summary {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  background: #f5f5f5;
-  border-radius: 8px;
-}
-
-.book-btn {
-  padding: 12px 30px;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.book-btn:hover:not(:disabled) {
-  background: #0056b3;
-}
-
-.book-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-/* Стили для мест в зале */
-.seats-grid {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 10px;
-  padding: 20px;
-}
-
-.seat {
-  width: 40px;
-  height: 40px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 12px;
-}
-
-.seat:hover {
-  background: #e9ecef;
-  transform: scale(1.05);
-}
-
-.seat.selected {
-  background: #28a745;
-  color: white;
-  border-color: #28a745;
-}
-
-.seat.occupied {
-  background: #dc3545;
-  color: white;
-  cursor: not-allowed;
-}
-
-.seat.vip {
-  background: #ffc107;
-  color: #212529;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-  .movie-info {
-    flex-direction: column;
-  }
-  
-  .movie-poster {
-    width: 100%;
-    height: auto;
-    max-height: 400px;
-  }
-  
-  .main-wrap {
-    padding: 10px;
-  }
-  
-  .seats-grid {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-  }
-  
-  .seat {
-    width: 35px;
-    height: 35px;
-  }
-  
-  /* Стили для кнопок времени сеансов */
-.time-button {
-  min-width: 80px;
-  height: 60px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 8px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.time-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
-}
-
-.time-button .small {
-  font-size: 11px;
-  margin-top: 2px;
-}
-
-/* Адаптивность для кнопок времени */
-@media (max-width: 768px) {
-  .time-button {
-    min-width: 70px;
-    height: 55px;
-    padding: 6px;
-    font-size: 14px;
-  }
-  
-  .time-button .small {
-    font-size: 10px;
-  }
-}
-
-/* Стили для страницы зала */
-.screen {
-  max-width: 600px;
-  margin: 0 auto;
-  font-weight: bold;
-  letter-spacing: 3px;
-}
-
-.seat-button {
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  padding: 0;
-}
-
-.seat-button:hover:not(:disabled) {
-  transform: scale(1.1);
-}
-
-.seat-legend {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-}
-
-.seat-legend.available {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-}
-
-.seat-legend.vip {
-  background-color: #ffc107;
-  border: 1px solid #ffc107;
-}
-
-.seat-legend.selected {
-  background-color: #007bff;
-  border: 1px solid #007bff;
-}
-
-.hall-layout {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-/* Стили для админских страниц */
-.admin-page {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  padding: 20px;
-}
-
-.admin-container {
-  background-color: rgba(255, 255, 255, 0.95);
-  border-radius: 15px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  padding: 30px;
-  margin-top: 50px;
-}
-
-.admin-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 30px;
-}
-
-.admin-sidebar {
-  background: #f8f9fa;
-  border-radius: 10px;
-  padding: 20px;
-  height: 100%;
-}
-
-.admin-content {
-  background: white;
-  border-radius: 10px;
-  padding: 25px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-}
-
-.admin-nav-link {
-  color: #495057;
-  padding: 12px 15px;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  transition: all 0.3s;
-  text-decoration: none;
-  display: block;
-}
-
-.admin-nav-link:hover {
-  background-color: #e9ecef;
-  color: #007bff;
-  transform: translateX(5px);
-}
-
-.admin-nav-link.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.admin-stats-card {
-  background: white;
-  border-radius: 10px;
-  padding: 20px;
-  text-align: center;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s;
-}
-
-.admin-stats-card:hover {
-  transform: translateY(-5px);
-}
-
-.admin-stats-icon {
-  font-size: 40px;
+.ticket-header__title {
+  color: #C76F00;
+  font-weight: 700;
+  font-size: 22px;
+  text-transform: uppercase;
   margin-bottom: 15px;
 }
 
-.admin-table {
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+/* Ticket details section */
+.ticket-details {
+  margin-bottom: 30px;
 }
 
-.admin-form-card {
-  background: white;
-  border-radius: 10px;
-  padding: 25px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-}
-
-.admin-btn-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  color: white;
-  transition: all 0.3s;
-}
-
-.admin-btn-gradient:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-  color: white;
-}
-
-/* Адаптированные стили под цветовую схему из кода */
-.admin-page {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  padding: 20px;
+.ticket-details__item {
   display: flex;
   align-items: center;
-  justify-content: center;
+  
 }
 
-.admin-container {
-  background-color: rgba(255, 255, 255, 0.95);
+.ticket-details__item:last-child {
+  border-bottom: 40px;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.ticket-details__label {
+  color: #000000;
+  font-weight: 400;
+  font-size: 16px;
+  align-items: center;
+}
+
+
+
+.ticket-details__value {
+  color: #000000;
+  font-weight: 700;
+  font-size: 16px;
+  word-break: break-word;
+  flex-grow: 1;
+}
+
+/* QR code section */
+.ticket-qr {
+  background: rgba(0, 0, 0, 0) !important;
+    border: none !important;
+   overflow: hidden;
+  margin: 0px auto;
+  max-width: 400px;
+  position: relative;
+  animation: qrFloat 3s ease-in-out infinite;
+}
+
+.ticket-qr__body {
+  padding: 10px;
+  text-align: center;
+}
+
+.ticket-qr__code {
+  border: 5px solid white;
+  border-radius: 0px;
+  transition: transform 0.5s ease;
+}
+
+
+/* User instructions */
+.ticket-instructions {
+  padding: 10px 0px;
   border-radius: 15px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  padding: 30px;
+  color: #000000;
+  font-size: 14px;
+  line-height: 1.7;
+  font-weight: 300;
+  text-align: left;
 }
 
-/* Цвета как в оригинальном коде */
-.admin-primary-color {
-  color: #63536C;
+/* ===== Responsive Styles ===== */
+@media (max-width: 768px) {
+  .ticket-card__body {
+    padding: 25px;
+  }
+  
+  .ticket-header__title {
+    font-size: 1.8rem;
+  }
+  
+  .ticket-details {
+    padding: 25px;
+  }
+  
+  .ticket-details__item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .ticket-details__label {
+    min-width: auto;
+    width: 100%;
+    margin-bottom: 5px;
+  }
+  
+  .ticket-details__value {
+    width: 100%;
+  }
+  
+  .ticket-qr {
+    margin: 30px auto;
+  }
+  
+  .ticket-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .ticket-action-btn {
+    width: 100%;
+    max-width: 300px;
+  }
 }
 
-.admin-primary-bg {
-  background-color: #63536C;
+@media (max-width: 576px) {
+  .ticket-card__body {
+    padding: 20px;
+  }
+  
+  .ticket-header__title {
+    font-size: 1.5rem;
+  }
+  
+  .ticket-details {
+    padding: 20px;
+  }
+  
+  .ticket-instructions {
+    padding: 20px;
+    font-size: 1rem;
+  }
+  
+  .ticket-seat-badge {
+    display: block;
+    margin-right: 0;
+    margin-bottom: 8px;
+    text-align: center;
+  }
 }
 
-.admin-secondary-color {
-  color: #16A6AF;
-}
 
-.admin-secondary-bg {
-  background-color: #16A6AF;
-}
 
-/* Ховер-эффекты */
-.btn-admin-primary {
-  background-color: #16A6AF;
-  border-color: #16A6AF;
-  color: white;
-}
 
-.btn-admin-primary:hover {
-  background-color: #12858c;
-  border-color: #12858c;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(22, 166, 175, 0.3);
-}
 
-/* Поля ввода */
-.form-control-admin {
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 10px 15px;
-  transition: all 0.3s;
-}
-
-.form-control-admin:focus {
-  border-color: #16A6AF;
-  box-shadow: 0 0 0 0.2rem rgba(22, 166, 175, 0.25);
-}
-}

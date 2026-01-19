@@ -148,19 +148,16 @@ const handleSubmit = async (e) => {
 
   return (
     <Container className="py-5">
-      <Row className="justify-content-center">
-        <Col md={6} lg={4}>
-          <Card className="shadow">
-            <Card.Body className="p-4">
-              <div className="text-center mb-4">
-                <h2 className="text-primary">
-                  <i className="bi bi-shield-lock me-2"></i>
-                  Администратор
-                </h2>
-                <p className="text-muted">Войдите в систему управления</p>
-                
-                {/* Статус API */}
-                <div className="mb-3">
+          <header className="user-page__header">
+        <div className="user-page__logo">
+          <div>
+          <span className="user-page__logo-bold">ИДЁМ</span>
+          <span className="user-page__logo-thin">В</span>
+          <span className="user-page__logo-bold">КИНО</span>
+          </div>
+        
+        </div>
+                        <div className="mb-3">
                   {apiStatus === 'checking' && (
                     <span className="badge bg-secondary">
                       <Spinner animation="border" size="sm" className="me-1" />
@@ -180,30 +177,30 @@ const handleSubmit = async (e) => {
                     </span>
                   )}
                 </div>
+      </header>
+      <Row className="justify-content-center">
+        <Col md={6} lg={4}>
+          <Card className="shadow">
+            <Card.Body className="p-4">
+              <div className="text-center mb-4">
+                <h2 className="text-primary">
+                  <i className="bi bi-shield-lock me-2"></i>
+                  Авторизация
+                </h2>
               </div>
-
-              {error && (
-                <Alert 
-                  variant={error.includes('API сервер недоступен') ? 'warning' : 'danger'} 
-                  className="text-center"
-                >
-                  <i className="bi bi-exclamation-triangle me-2"></i>
-                  {error}
-                </Alert>
-              )}
 
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-3">
                   <Form.Label>
                     <i className="bi bi-person me-2"></i>
-                    Логин
+                    E-mail
                   </Form.Label>
                   <Form.Control
                     type="text"
                     name="login"
                     value={credentials.login}
                     onChange={handleChange}
-                    placeholder="Введите логин"
+                    placeholder="example@domain.xyz"
                     required
                     disabled={loading}
                   />
@@ -219,7 +216,7 @@ const handleSubmit = async (e) => {
                     name="password"
                     value={credentials.password}
                     onChange={handleChange}
-                    placeholder="Введите пароль"
+                    placeholder=""
                     required
                     disabled={loading}
                   />
@@ -227,6 +224,7 @@ const handleSubmit = async (e) => {
 
                 <div className="d-grid gap-2">
                   <Button 
+                  className = "button"
                     variant="primary" 
                     type="submit" 
                     disabled={loading}
@@ -237,62 +235,25 @@ const handleSubmit = async (e) => {
                         <Spinner
                           animation="border"
                           size="sm"
-                          className="me-2"
+                          
                         />
                         Вход...
                       </>
                     ) : (
                       <>
                         <i className="bi bi-box-arrow-in-right me-2"></i>
-                        Войти через API
+                        АВТОРИЗОВАТЬСЯ
                       </>
                     )}
                   </Button>
                   
                   <div className="d-flex gap-2">
-                    <Button 
-                      variant="outline-secondary" 
-                      onClick={handleQuickLogin}
-                      size="sm"
-                      className="flex-fill"
-                    >
-                      <i className="bi bi-lightning me-2"></i>
-                      Тестовые данные
-                    </Button>
-                    
-                    <Button 
-                      variant="outline-secondary" 
-                      onClick={handleClearCredentials}
-                      size="sm"
-                      className="flex-fill"
-                    >
-                      <i className="bi bi-eraser me-2"></i>
-                      Очистить
-                    </Button>
+
                   </div>
-                  
-                  {/* Кнопка тестового режима - показываем только если API недоступен */}
-                  {apiStatus === 'offline' && (
-                    <Button 
-                      variant="warning" 
-                      onClick={handleTestModeLogin}
-                      size="lg"
-                    >
-                      <i className="bi bi-tools me-2"></i>
-                      Войти в тестовом режиме
-                    </Button>
-                  )}
+
                 </div>
 
-                <div className="text-center mt-4">
-                  <Button 
-                    variant="link" 
-                    onClick={() => navigate('/')}
-                  >
-                    <i className="bi bi-arrow-left me-2"></i>
-                    Вернуться на сайт
-                  </Button>
-                </div>
+
               </Form>
 
               

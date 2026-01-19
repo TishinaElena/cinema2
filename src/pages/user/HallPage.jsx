@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Spinner, Alert, Badge } from 'react-bootstrap';
+import { Container, Card, Button, Spinner, Alert } from 'react-bootstrap';
 import { useData } from '../../contexts/DataContext';
 import { cinemaAPI } from '../../services/api';
 
@@ -40,11 +40,9 @@ const HallPage = () => {
     }
   }, [contextLoading, seances, halls, films, seanceId]);
 
-  // ВАЖНО: Загружаем актуальную конфигурацию зала из /hallconfig
   const loadActualHallConfig = async (seanceId) => {
     try {
-      // 1. Получаем АКТУАЛЬНУЮ конфигурацию зала для этого сеанса
-      const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const date = new Date().toISOString().split('T')[0];
       const config = await cinemaAPI.getHallConfig(seanceId, date);
       
       if (!Array.isArray(config)) {
@@ -53,7 +51,6 @@ const HallPage = () => {
       
       setHallConfig(config);
       
-      // 2. Подсчитываем статистику по местам
       let takenCount = 0;
       let totalSeats = 0;
       
@@ -66,28 +63,12 @@ const HallPage = () => {
       
       setConfigInfo({ taken: takenCount, total: totalSeats });
       
-      // 3. Логируем для отладки
-      console.log('Актуальная конфигурация зала загружена:');
-      console.log('- Занято мест:', takenCount);
-      console.log('- Всего мест:', totalSeats);
-      console.log('- Конфигурация:', config);
-      
-      // 4. Проверяем, отличается ли актуальная конфигурация от базовой
-      if (hall && hall.hall_config) {
-        const baseConfig = hall.hall_config;
-        console.log('Сравнение конфигураций:');
-        console.log('Базовая (из alldata):', baseConfig);
-        console.log('Актуальная (из hallconfig):', config);
-      }
-      
     } catch (err) {
       console.error('Ошибка загрузки актуальной конфигурации зала:', err);
       setApiError('Не удалось загрузить актуальную схему зала');
       
-      // Fallback: используем базовую конфигурацию из alldata
       if (hall && hall.hall_config) {
         setHallConfig(hall.hall_config);
-        console.warn('Используется базовая конфигурация из alldata');
       } else {
         setHallConfig([]);
       }
@@ -97,16 +78,13 @@ const HallPage = () => {
     }
   };
 
-  // Функция получения типа места из АКТУАЛЬНОЙ конфигурации
   const getSeatType = (rowIndex, seatIndex) => {
-    // Используем актуальную конфигурацию из hallconfig
     if (hallConfig.length > 0 && 
         hallConfig[rowIndex] && 
         hallConfig[rowIndex][seatIndex]) {
       return hallConfig[rowIndex][seatIndex];
     }
     
-    // Fallback: используем базовую конфигурацию
     if (hall && hall.hall_config && Array.isArray(hall.hall_config)) {
       const config = hall.hall_config;
       if (config[rowIndex] && config[rowIndex][seatIndex]) {
@@ -117,13 +95,9 @@ const HallPage = () => {
     return 'standart';
   };
 
-  // Функция проверки доступности места
   const isSeatAvailable = (rowIndex, seatIndex) => {
     const seatType = getSeatType(rowIndex, seatIndex);
     
-    // Место недоступно если:
-    // 1. Тип 'disabled' - заблокированное место
-    // 2. Тип 'taken' - уже купленное место
     if (seatType === 'disabled' || seatType === 'taken') {
       return false;
     }
@@ -158,20 +132,17 @@ const HallPage = () => {
       return;
     }
     
-    // Получаем данные о зале
     const hallRows = hall?.rows || 10;
     const hallCols = hall?.cols || 15;
     const vipRows = hall?.vipRows || [];
     const standardPrice = seance?.priceStandard || 400;
     const vipPrice = seance?.priceVip || 600;
     
-    // Преобразуем selectedSeats в числовые ID (для совместимости с PaymentPage)
     const numericSelectedSeats = selectedSeats.map(seatKey => {
       const [row, seat] = seatKey.split('-').map(Number);
       return (row - 1) * hallCols + seat;
     });
     
-    // Рассчитываем стоимость
     const totalPrice = selectedSeats.reduce((total, seatKey) => {
       const [row] = seatKey.split('-').map(Number);
       const rowIndex = row - 1;
@@ -181,7 +152,6 @@ const HallPage = () => {
       return total + (isVip ? vipPrice : standardPrice);
     }, 0);
     
-    // Переходим на оплату
     navigate('/payment', {
       state: {
         movie,
@@ -206,52 +176,32 @@ const HallPage = () => {
     });
   };
 
-  const formatTime = (time) => {
-    if (!time) return '';
-    if (typeof time === 'string' && time.includes(':')) {
-      return time;
-    }
+  const formatTime = (timeValue) => {
+    if (!timeValue) return '';
+    
     try {
-      const date = new Date(time);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch {
-      return time;
+      const date = new Date(timeValue);
+      
+      if (isNaN(date.getTime())) {
+        if (typeof timeValue === 'string') {
+          const timeMatch = timeValue.match(/(\d{1,2}:\d{2})/);
+          return timeMatch ? timeMatch[0] : timeValue;
+        }
+        return String(timeValue);
+      }
+      
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+      
+    } catch (error) {
+      console.error('Error formatting time:', error, timeValue);
+      return typeof timeValue === 'string' ? timeValue : String(timeValue);
     }
-  };
-
-  const formatDuration = (minutes) => {
-    if (!minutes) return '';
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}ч ${mins}мин`;
   };
 
   const getMovieTitle = (movie) => {
     return movie?.title || movie?.film_name || 'Фильм';
-  };
-
-  const getMovieDescription = (movie) => {
-    return movie?.description || movie?.film_description || '';
-  };
-
-  const getMovieDuration = (movie) => {
-    return movie?.duration || movie?.film_duration || 0;
-  };
-
-  const getMovieAgeRating = (movie) => {
-    return movie?.ageRating || '0+';
-  };
-
-  const getMovieGenre = (movie) => {
-    return movie?.genre || '';
-  };
-
-  const getMovieCountry = (movie) => {
-    return movie?.country || movie?.film_origin || '';
-  };
-
-  const getMoviePoster = (movie) => {
-    return movie?.posterUrl || movie?.film_poster || 'https://via.placeholder.com/300x450?text=No+Poster';
   };
 
   const getHallName = (hall) => {
@@ -278,7 +228,6 @@ const HallPage = () => {
     return seance?.priceVip || hall?.hall_price_vip || 600;
   };
 
-  // Функция обновления схемы зала
   const refreshHall = async () => {
     if (!seance) return;
     
@@ -292,53 +241,6 @@ const HallPage = () => {
     } finally {
       setLocalLoading(false);
     }
-  };
-
-  // Функция для отображения информации о конфигурации
-  const renderConfigInfo = () => {
-    if (hallConfig.length === 0 || configInfo.total === 0) return null;
-    
-    const freeSeats = configInfo.total - configInfo.taken;
-    const percentage = Math.round((configInfo.taken / configInfo.total) * 100);
-    
-    return (
-      <Alert variant="info" className="mt-3">
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-            <i className="bi bi-info-circle me-2"></i>
-            <strong>Статус зала:</strong> {configInfo.taken} занято / {freeSeats} свободно ({percentage}%)
-          </div>
-          <Button 
-            variant="outline-info" 
-            size="sm"
-            onClick={() => {
-              console.log('Актуальная конфигурация зала:', hallConfig);
-              console.log('Базовая конфигурация:', hall?.hall_config);
-              alert(`Статистика зала:
-- Занято мест: ${configInfo.taken}
-- Свободно мест: ${freeSeats}
-- Всего мест: ${configInfo.total}
-- Заполненность: ${percentage}%
-
-Подробности в консоли разработчика.`);
-            }}
-          >
-            <i className="bi bi-graph-up me-1"></i> Статистика
-          </Button>
-        </div>
-        <div className="progress mt-2" style={{ height: '10px' }}>
-          <div 
-            className="progress-bar bg-danger" 
-            role="progressbar" 
-            style={{ width: `${percentage}%` }}
-            aria-valuenow={percentage} 
-            aria-valuemin="0" 
-            aria-valuemax="100"
-          >
-          </div>
-        </div>
-      </Alert>
-    );
   };
 
   if (contextLoading || localLoading) {
@@ -358,7 +260,6 @@ const HallPage = () => {
         <Alert variant="danger">
           <Alert.Heading>Ошибка!</Alert.Heading>
           <p>{error || apiError}</p>
-          <p className="mb-0">Проверьте подключение к интернету и попробуйте снова.</p>
         </Alert>
         <div className="d-flex gap-2">
           <Button variant="primary" onClick={() => navigate('/')}>
@@ -393,302 +294,136 @@ const HallPage = () => {
   const vipPrice = getSeanceVipPrice(seance);
 
   return (
-    <Container className="py-4">
-      <Card className="mb-4">
-        <Card.Header className="d-flex justify-content-between align-items-center">
-          <h4 className="mb-0">
-            <i className="bi bi-ticket-perforated me-2"></i>
-            Выбор мест
-          </h4>
-          <div className="d-flex gap-2">
-            <Button 
-              variant="outline-secondary" 
-              size="sm"
-              onClick={refreshHall}
-              disabled={localLoading}
-            >
-              <i className="bi bi-arrow-clockwise me-1"></i>
-              Обновить схему
-            </Button>
-            <Button 
-              variant="outline-secondary" 
-              size="sm"
-              onClick={() => navigate('/')}
-            >
-              <i className="bi bi-arrow-left me-1"></i>
-              Назад к расписанию
-            </Button>
-          </div>
-        </Card.Header>
-        <Card.Body>
-          <Row className="mb-4 align-items-center">
-            <Col md={3} className="mb-3 mb-md-0">
-              <div className="position-relative">
-                <img 
-                  src={getMoviePoster(movie)} 
-                  alt={getMovieTitle(movie)} 
-                  className="img-fluid rounded shadow-sm"
-                  style={{ maxHeight: '300px', objectFit: 'cover', width: '100%' }}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = 'https://via.placeholder.com/300x450?text=No+Poster';
-                  }}
-                />
-                <Badge 
-                  bg={getMovieAgeRating(movie) === '18+' ? 'danger' : 'warning'}
-                  className="position-absolute top-0 start-0 m-2"
-                >
-                  {getMovieAgeRating(movie)}
-                </Badge>
-              </div>
-            </Col>
-            <Col md={9}>
-              <h3>{getMovieTitle(movie)}</h3>
-              <p className="text-muted">{getMovieDescription(movie)}</p>
-              
-              <div className="d-flex flex-wrap gap-4 mb-3">
-                <div>
-                  <i className="bi bi-clock text-primary me-2"></i>
-                  <strong>Продолжительность:</strong> {formatDuration(getMovieDuration(movie))}
-                </div>
-                <div>
-                  <i className="bi bi-film text-primary me-2"></i>
-                  <strong>Жанр:</strong> {getMovieGenre(movie)}
-                </div>
-                <div>
-                  <i className="bi bi-globe text-primary me-2"></i>
-                  <strong>Страна:</strong> {getMovieCountry(movie)}
-                </div>
-              </div>
-              
-              <div className="bg-light p-3 rounded">
-                <Row>
-                  <Col md={4}>
-                    <div className="mb-2">
-                      <i className="bi bi-clock-history text-primary me-2"></i>
-                      <strong>Время сеанса:</strong>
-                      <div className="fs-5 fw-bold text-primary">
-                        {formatTime(seance.startTime || seance.seance_time)}
-                      </div>
-                    </div>
-                  </Col>
-                  <Col md={4}>
-                    <div className="mb-2">
-                      <i className="bi bi-door-open text-primary me-2"></i>
-                      <strong>Зал:</strong>
-                      <div className="fs-5 fw-bold">
-                        {getHallName(hall)}
-                      </div>
-                    </div>
-                  </Col>
-                  <Col md={4}>
-                    <div className="mb-2">
-                      <i className="bi bi-currency-dollar text-primary me-2"></i>
-                      <strong>Цены:</strong>
-                      <div>
-                        <span className="text-success fw-bold">{standardPrice}₽</span> (стандарт)
-                        <span className="mx-2">•</span>
-                        <span className="text-warning fw-bold">{vipPrice}₽</span> (VIP)
-                      </div>
-                    </div>
-                  </Col>
-                </Row>
-              </div>
-            </Col>
-          </Row>
+    <Container className="hall-page">
+      <header className="user-page__header">
+        <div className="user-page__logo">
+          <span className="user-page__logo-bold">ИДЁМ</span>
+          <span className="user-page__logo-thin">В</span>
+          <span className="user-page__logo-bold">КИНО</span>
+        </div>
+      </header>
 
-          {renderConfigInfo()}
-
-          <div className="text-center mb-4">
-            <div className="screen mb-4 p-3 bg-gradient bg-dark text-white rounded shadow">
-              <i className="bi bi-display me-2"></i>
-              ЭКРАН
+      <main className="content_card">
+      
+          
+          <div className="hall-page__movie-info">
+            <h3 className="card__title">{getMovieTitle(movie)}</h3>
+            
+            <div className="movie-card__meta">
+              <span>Начало сеанса: </span>
+              <span>{formatTime(seance.startTime || seance.seance_time)}</span>
             </div>
             
-            <div className="hall-layout mb-4">
-              {Array.from({ length: hallRows }, (_, rowIndex) => {
-                const rowNumber = rowIndex + 1;
-                const isVipRow = vipRows.includes(rowNumber);
-                
-                return (
-                  <div key={rowIndex} className="d-flex justify-content-center mb-3">
-                    <div className="me-3 d-flex align-items-center" style={{ width: '60px' }}>
-                      <div className={`p-2 rounded ${isVipRow ? 'bg-warning text-dark' : 'bg-secondary text-white'}`}>
-                        <small className="fw-bold">Ряд {rowNumber}</small>
-                        {isVipRow && <small className="d-block">VIP</small>}
-                      </div>
-                    </div>
-                    <div className="d-flex flex-wrap justify-content-center" style={{ maxWidth: '800px' }}>
-                      {Array.from({ length: hallCols }, (_, colIndex) => {
-                        const seatNumber = colIndex + 1;
-                        const seatKey = `${rowNumber}-${seatNumber}`;
-                        const isSelected = selectedSeats.includes(seatKey);
-                        
-                        const seatType = getSeatType(rowIndex, colIndex);
-                        const isAvailable = isSeatAvailable(rowIndex, colIndex);
-                        
-                        let variant = 'outline-secondary';
-                        let disabled = false;
-                        
-                        if (!isAvailable) {
-                          variant = 'secondary';
-                          disabled = true;
-                        } else if (isSelected) {
-                          variant = 'primary';
-                        } else if (seatType === 'vip' || isVipRow) {
-                          variant = 'warning';
-                        }
-                        
-                        return (
-                          <Button
-                            key={colIndex}
-                            variant={variant}
-                            disabled={disabled}
-                            className="mx-1 mb-1 seat-button d-flex align-items-center justify-content-center"
-                            style={{ 
-                              width: '40px', 
-                              height: '40px',
-                              fontSize: '12px',
-                              opacity: disabled ? 0.5 : 1,
-                              cursor: disabled ? 'not-allowed' : 'pointer'
-                            }}
-                            onClick={() => handleSeatClick(rowIndex, colIndex, rowNumber, seatNumber)}
-                            title={`Ряд ${rowNumber}, Место ${seatNumber} - ${
-                              !isAvailable 
-                                ? (seatType === 'taken' ? 'Занято' : 'Заблокировано')
-                                : (seatType === 'vip' || isVipRow ? 'VIP' : 'Стандарт')
-                            }`}
-                          >
-                            {seatNumber}
-                            {!isAvailable && (
-                              <div className="position-absolute" style={{ fontSize: '18px', marginTop: '-8px' }}>
-                                ✕
-                              </div>
-                            )}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="d-flex flex-wrap justify-content-center gap-4 mb-4">
-              <div className="d-flex align-items-center">
-                <Button variant="outline-secondary" size="sm" className="me-2" style={{ width: '30px', height: '30px' }}></Button>
-                <small>Свободно (стандарт)</small>
-              </div>
-              <div className="d-flex align-items-center">
-                <Button variant="warning" size="sm" className="me-2" style={{ width: '30px', height: '30px' }}></Button>
-                <small>Свободно (VIP)</small>
-              </div>
-              <div className="d-flex align-items-center">
-                <Button variant="primary" size="sm" className="me-2" style={{ width: '30px', height: '30px' }}></Button>
-                <small>Выбрано</small>
-              </div>
-              <div className="d-flex align-items-center">
-                <Button variant="secondary" size="sm" className="me-2" style={{ width: '30px', height: '30px', opacity: 0.5 }}>
-                  <div style={{ fontSize: '14px', marginTop: '-4px' }}>✕</div>
-                </Button>
-                <small>Недоступно</small>
-              </div>
+            <div className="card__title">
+              <span className="">{getHallName(hall)}</span>
             </div>
           </div>
 
-          <Card className="mt-4 shadow">
-            <Card.Body className="p-4">
-              <Row className="align-items-center">
-                <Col md={8}>
-                  <h5 className="mb-3">
-                    <i className="bi bi-cart-check me-2"></i>
-                    Ваш заказ
-                  </h5>
+          <div className="text-center mb-4">
+            <div className="hall-page__container bg-dark p-3">
+              <div className="hall-page__screen mb-4 p-3 bg-gradient bg-dark text-white rounded shadow">
+                <i className="bi bi-display me-2"></i>
+                ЭКРАН
+              </div>
+              
+              <div className="hall-page__layout">
+                {Array.from({ length: hallRows }, (_, rowIndex) => {
+                  const rowNumber = rowIndex + 1;
+                  const isVipRow = vipRows.includes(rowNumber);
                   
-                  {selectedSeats.length > 0 ? (
-                    <div>
-                      <div className="mb-2">
-                        <strong>Выбранные места:</strong>
-                        <div className="d-flex flex-wrap gap-2 mt-2">
-                          {selectedSeats.map(seatKey => {
-                            const [row, seat] = seatKey.split('-').map(Number);
-                            const rowIndex = row - 1;
-                            const seatIndex = seat - 1;
-                            const seatType = getSeatType(rowIndex, seatIndex);
-                            const isVip = seatType === 'vip' || vipRows.includes(row);
-                            const price = isVip ? vipPrice : standardPrice;
-                            
-                            return (
-                              <Badge 
-                                key={seatKey} 
-                                bg={isVip ? 'warning' : 'info'} 
-                                className="p-2"
-                              >
-                                Ряд {row}, Место {seat} - {price}₽
-                              </Badge>
-                            );
-                          })}
-                        </div>
+                  return (
+                    <div key={rowIndex} className="hall-page__row d-flex justify-content-center mb-1">
+                      <div className="d-flex flex-wrap justify-content-center hall-page__seats-container">
+                        {Array.from({ length: hallCols }, (_, colIndex) => {
+                          const seatNumber = colIndex + 1;
+                          const seatKey = `${rowNumber}-${seatNumber}`;
+                          const isSelected = selectedSeats.includes(seatKey);
+                          
+                          const seatType = getSeatType(rowIndex, colIndex);
+                          const isAvailable = isSeatAvailable(rowIndex, colIndex);
+                          
+                          let seatClass = 'hall-page__seat hall-page__seat--standard';
+                          if (!isAvailable) {
+                            seatClass = 'hall-page__seat hall-page__seat--occupied';
+                          } else if (isSelected) {
+                            seatClass = 'hall-page__seat hall-page__seat--selected';
+                          } else if (seatType === 'vip' || isVipRow) {
+                            seatClass = 'hall-page__seat hall-page__seat--vip';
+                          }
+                          
+                          return (
+                            <button
+                              key={colIndex}
+                              className={`${seatClass} mx-1 mb-1 d-flex align-items-center justify-content-center`}
+                              disabled={!isAvailable}
+                              onClick={() => handleSeatClick(rowIndex, colIndex, rowNumber, seatNumber)}
+                              title={`Ряд ${rowNumber}, Место ${seatNumber} - ${
+                                !isAvailable 
+                                  ? (seatType === 'taken' ? 'Занято' : 'Заблокировано')
+                                  : (seatType === 'vip' || isVipRow ? `VIP (${vipPrice} ₽)` : `Стандарт (${standardPrice} ₽)`)
+                              }`}
+                            >
+
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="hall-page__legend">
+                <div className="d-flex flex-column align-items-center">
+                  <div className="hall-page__legend-container">
+                    <div className="hall-page__legend-row d-flex mb-3">
+                      <div className="hall-page__legend-item d-flex align-items-center">
+                        <span className="hall-page__legend-icon hall-page__legend-icon--standard me-2"></span>
+                        <small className="text-nowrap text-white">
+                          Свободно ({standardPrice} руб)
+                        </small>
                       </div>
                       
-                      <div className="mb-2">
-                        <strong>Итого мест:</strong> {selectedSeats.length}
+                      <div className="hall-page__legend-item d-flex align-items-center justify-content-start">
+                        <span className="hall-page__legend-icon hall-page__legend-icon--occupied me-2">                             </span>
+                        <small className="text-nowrap text-white">Занято</small>
+                      </div>
+                    </div>
+                    
+                    <div className="hall-page__legend-row d-flex">
+                      <div className="hall-page__legend-item d-flex align-items-center">
+                        <span className="hall-page__legend-icon hall-page__legend-icon--vip me-2"></span>
+                        <small className="text-nowrap text-white">
+                          Свободно VIP ({vipPrice} руб)
+                        </small>
                       </div>
                       
-                      <div>
-                        <strong>Общая сумма:</strong>
-                        <div className="fs-4 fw-bold text-success">
-                          {selectedSeats.reduce((total, seatKey) => {
-                            const [row] = seatKey.split('-').map(Number);
-                            const rowIndex = row - 1;
-                            const seatIndex = seatKey.split('-')[1] - 1;
-                            const seatType = getSeatType(rowIndex, seatIndex);
-                            const isVip = seatType === 'vip' || vipRows.includes(row);
-                            return total + (isVip ? vipPrice : standardPrice);
-                          }, 0)}₽
-                        </div>
+                      <div className="hall-page__legend-item d-flex align-items-center justify-content-start">
+                        <span className="hall-page__legend-icon hall-page__legend-icon--selected me-2"></span>
+                        <small className="text-nowrap text-white">Выбрано</small>
                       </div>
                     </div>
-                  ) : (
-                    <div className="text-muted">
-                      <i className="bi bi-info-circle me-2"></i>
-                      Выберите места в зале
-                    </div>
-                  )}
-                </Col>
-                
-                <Col md={4} className="text-end">
-                  <Button 
-                    variant="success" 
-                    size="lg"
-                    className="px-5 py-3"
-                    disabled={selectedSeats.length === 0}
-                    onClick={handleBooking}
-                  >
-                    <i className="bi bi-check-circle me-2"></i>
-                    Перейти к оплате
-                    <div className="small">
-                      {selectedSeats.length} мест
-                    </div>
-                  </Button>
-                  
-                  <div className="mt-3">
-                    <Button 
-                      variant="outline-secondary" 
-                      size="sm"
-                      onClick={() => setSelectedSeats([])}
-                      disabled={selectedSeats.length === 0}
-                    >
-                      <i className="bi bi-x-circle me-1"></i>
-                      Очистить выбор
-                    </Button>
                   </div>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        </Card.Body>
-      </Card>
+                </div>
+              </div>
+            </div> 
+          </div>
+
+          <div className="text-center ">
+            <Button 
+              variant="success" 
+              size="lg"
+              className="button hall-page__booking-btn"
+              disabled={selectedSeats.length === 0}
+              onClick={handleBooking}
+            >
+              
+              ЗАБРОНИРОВАТЬ
+            </Button>
+          </div>
+          
+  
+      </main>
     </Container>
   );
 };

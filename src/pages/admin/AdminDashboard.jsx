@@ -104,10 +104,7 @@ const HallsManagement = () => {
           {halls && halls.map(hall => (
             <ListGroup.Item key={hall.id} className="d-flex justify-content-between align-items-center">
               <div>
-                <span className="fw-bold">• {hall.hall_name}</span>
-                <Badge bg="secondary" className="ms-2">
-                  {hall.hall_rows}×{hall.hall_places}
-                </Badge>
+                <span className="fw-bold"> - {hall.hall_name}</span>
               </div>
               <Button 
                 variant="outline-danger" 
@@ -121,12 +118,13 @@ const HallsManagement = () => {
         </ListGroup>
       </div>
 
-      <div className="text-center">
+      <div className="text-left">
         <Button 
+        className='button'
           variant="primary" 
           onClick={() => setShowCreateModal(true)}
         >
-          Создать новый зал
+          СОЗДАТЬ ЗАЛ
         </Button>
       </div>
 
@@ -249,7 +247,7 @@ const HallConfiguration = () => {
       )}
       
       <Form.Group className="mb-4">
-        <Form.Label>Выберите зал для конфигурации:</Form.Label>
+        <div>Выберите зал для конфигурации:</div>
         <ButtonGroup>
           {halls && halls.map(hall => (
             <Button
@@ -267,6 +265,7 @@ const HallConfiguration = () => {
       {selectedHallId && (
         <>
           <Row className="mb-4">
+            <div>Укажите количество рядов  и максимальное количество кресел в ряду:</div>
             <Col md={3}>
               <Form.Group>
                 <Form.Label>Рядов, шт</Form.Label>
@@ -292,23 +291,23 @@ const HallConfiguration = () => {
           </Row>
 
           <div className="mb-4">
-            <h6>Легенда:</h6>
+            <h6>Теперь вы можете указать типы кресел на схеме зала:</h6>
             <div className="d-flex gap-3 mb-3">
               <Badge bg="secondary" className="d-flex align-items-center gap-1">
                 <div className="seat seat-standart"></div>
-                Обычные
+                - обычные кресла
               </Badge>
               <Badge bg="warning" className="d-flex align-items-center gap-1">
                 <div className="seat seat-vip"></div>
-                VIP
+                - VIP кресла
               </Badge>
               <Badge bg="light" text="dark" className="d-flex align-items-center gap-1">
                 <div className="seat seat-disabled"></div>
-                Заблокировано
+                - заблокированные (нет кресла)
               </Badge>
             </div>
             <p className="text-muted small">
-              Кликните по месту для изменения типа
+              ЧТобы изменить вид кресла, нажмите по нему левой кнопкой мыши
             </p>
           </div>
 
@@ -344,11 +343,11 @@ const HallConfiguration = () => {
           </Card>
 
           <div className="d-flex justify-content-center gap-2">
-            <Button variant="secondary" onClick={() => selectedHallId && handleHallSelect(selectedHallId)}>
-              Отмена
+            <Button className = "button white-button" variant="secondary" onClick={() => selectedHallId && handleHallSelect(selectedHallId)}>
+              ОТМЕНА
             </Button>
-            <Button variant="primary" onClick={handleSaveConfig}>
-              Сохранить конфигурацию
+            <Button className = "button" variant="primary" onClick={handleSaveConfig}>
+              СОХРАНИТЬ
             </Button>
           </div>
         </>
@@ -411,7 +410,7 @@ const PriceConfiguration = () => {
       )}
       
       <Form.Group className="mb-4">
-        <Form.Label>Выберите зал для настройки цен:</Form.Label>
+        <div>Выберите зал для настройки цен:</div>
         <ButtonGroup>
           {halls && halls.map(hall => (
             <Button
@@ -428,21 +427,23 @@ const PriceConfiguration = () => {
 
       {selectedHallId && (
         <>
-          <Row className="mb-4">
-            <Col md={6}>
+          
+            <div>Установите цены для типов кресел:</div>
+            
               <Form.Group>
-                <Form.Label>Цена обычных мест (руб.)</Form.Label>
+                <Form.Label>Цена, рублей</Form.Label>
                 <Form.Control
                   type="number"
                   value={priceStandart}
                   onChange={e => setPriceStandart(e.target.value)}
                   min="0"
                 />
+                
               </Form.Group>
-            </Col>
-            <Col md={6}>
+            
+            
               <Form.Group>
-                <Form.Label>Цена VIP мест (руб.)</Form.Label>
+                <Form.Label>Цена, рублей</Form.Label>
                 <Form.Control
                   type="number"
                   value={priceVip}
@@ -450,15 +451,15 @@ const PriceConfiguration = () => {
                   min="0"
                 />
               </Form.Group>
-            </Col>
-          </Row>
+            
+          
 
           <div className="d-flex justify-content-center gap-2">
-            <Button variant="secondary" onClick={() => selectedHallId && handleHallSelect(selectedHallId)}>
-              Отмена
+            <Button className='button' variant="secondary" onClick={() => selectedHallId && handleHallSelect(selectedHallId)}>
+              ОТМЕНА
             </Button>
-            <Button variant="primary" onClick={handleSavePrice}>
-              Сохранить цены
+            <Button className='button' variant="primary" onClick={handleSavePrice}>
+              СОХРАНИТЬ
             </Button>
           </div>
         </>
@@ -639,16 +640,15 @@ const SeanceManagement = () => {
       )}
       
       <div className="d-flex gap-2 mb-4">
-        <Button variant="success" onClick={() => setShowFilmModal(true)}>
-          Добавить фильм
+        <Button className='button' variant="success" onClick={() => setShowFilmModal(true)}>
+          ДОБАВИТЬ ФИЛЬМ
         </Button>
-        <Button variant="info" onClick={() => setShowSeanceModal(true)}>
-          Добавить сеанс
+        <Button className='button' variant="info" onClick={() => setShowSeanceModal(true)}>
+          ДОБАВИТЬ СЕАНС
         </Button>
       </div>
 
       <div className="mb-4">
-        <h6>Доступные фильмы (перетащите в расписание):</h6>
         <div className="d-flex flex-wrap gap-2">
           {films && films.map(film => (
             <Card
@@ -935,21 +935,19 @@ const SalesManagement = () => {
       {selectedHall && (
         <Card className="text-center">
           <Card.Body>
-            <Card.Title>
-              Статус продаж для зала "{selectedHall.hall_name}"
-            </Card.Title>
-            
-            <Badge bg={selectedHall.hall_open === 1 ? 'success' : 'danger'} className="fs-5 mb-4 p-3">
-              {selectedHall.hall_open === 1 ? 'Продажи открыты' : 'Продажи закрыты'}
-            </Badge>
+        
+            <div  className="mb-2 p-2">
+              {selectedHall.hall_open === 1 ? 'Продажи открыты' : 'Всё готово к открытию'}
+            </div>
             
             <div className="mt-4">
               <Button
+              className='button'
                 variant={selectedHall.hall_open === 1 ? 'danger' : 'success'}
                 size="lg"
                 onClick={() => toggleSales(selectedHall.id)}
               >
-                {selectedHall.hall_open === 1 ? 'Приостановить продажи' : 'Открыть продажи'}
+                {selectedHall.hall_open === 1 ? 'ЗАКРЫТЬ ПРОДАЖУ БИЛЕТОВ' : 'ОТКРЫТЬ ПРОДАЖУ БИЛЕТОВ'}
               </Button>
             </div>
           </Card.Body>
@@ -970,50 +968,21 @@ const AdminDashboard = () => {
 
   return (
     <Container className="py-4">
-      <Card className="shadow">
-        <Card.Body>
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h1 className="mb-0">Админ-панель кинотеатра</h1>
-            <Button 
-              variant="outline-danger"
-              onClick={handleLogout}
-            >
-              Выйти из системы
-            </Button>
+                <header className="user-page__header">
+        <div className="user-page__logo">
+          <div>
+          <span className="user-page__logo-bold">ИДЁМ</span>
+          <span className="user-page__logo-thin">В</span>
+          <span className="user-page__logo-bold">КИНО</span>
           </div>
-          
-          <Alert variant="success" className="mb-4">
-            <Alert.Heading>Добро пожаловать в систему управления кинотеатром!</Alert.Heading>
-            <p className="mb-0">
-              Здесь вы можете управлять залами, фильмами, сеансами и продажами билетов.
-            </p>
-          </Alert>
-          
-          <Accordion defaultActiveKey="0" className="mb-4">
-            <Accordion.Item eventKey="0">
-              <Accordion.Header>Быстрые действия</Accordion.Header>
-              <Accordion.Body>
-                <div className="d-flex flex-wrap gap-2">
-                  <Button variant="primary" onClick={() => document.getElementById('halls-management')?.scrollIntoView({ behavior: 'smooth' })}>
-                    Управление залами
-                  </Button>
-                  <Button variant="success" onClick={() => document.getElementById('seance-management')?.scrollIntoView({ behavior: 'smooth' })}>
-                    Управление фильмами
-                  </Button>
-                  <Button variant="info" onClick={() => document.getElementById('price-configuration')?.scrollIntoView({ behavior: 'smooth' })}>
-                    Настройка цен
-                  </Button>
-                  <Button variant="warning" onClick={() => document.getElementById('sales-management')?.scrollIntoView({ behavior: 'smooth' })}>
-                    Управление продажами
-                  </Button>
-                </div>
-              </Accordion.Body>
-            </Accordion.Item>
-          </Accordion>
-
+        
+        </div>
+       
+      </header>
+      <main className=''>
           {/* Управление залами */}
           <div id="halls-management">
-            <AdminSection title="Управление залами" initiallyOpen={true}>
+            <AdminSection title="УПРАВЛЕНИЕ ЗАЛАМИ" initiallyOpen={true}>
               <HallsManagement />
             </AdminSection>
           </div>
@@ -1045,8 +1014,7 @@ const AdminDashboard = () => {
               <SalesManagement />
             </AdminSection>
           </div>
-        </Card.Body>
-      </Card>
+</main>
       
       {/* Добавляем стили */}
       <style>{`
