@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   Container, 
-  Row, 
-  Col, 
-  Card, 
   Button, 
-  Badge, 
   Spinner, 
   Alert 
 } from 'react-bootstrap';
-import { format, addDays, isToday, parseISO, isSameDay } from 'date-fns';
+import { format, addDays, isToday, parseISO, isSameDay, isBefore } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cinemaAPI } from '../../services/api';
 
@@ -23,10 +19,23 @@ const MainPage = () => {
   const [halls, setHalls] = useState([]);
   const [seances, setSeances] = useState([]);
   const [filteredSeances, setFilteredSeances] = useState([]);
+  const [dateOffset, setDateOffset] = useState(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const dateContainerRef = useRef(null);
+  
+  const DAYS_TO_SHOW = 7;
+  const STEP = 1;
 
   // Загрузка данных из API
   useEffect(() => {
     loadData();
+    
+    // Обновляем текущее время каждую минуту
+    const timeInterval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // 60 секунд
+    
+    return () => clearInterval(timeInterval);
   }, []);
 
   // Фильтрация сеансов при изменении даты
@@ -35,6 +44,10 @@ const MainPage = () => {
       filterSeancesByDate();
     }
   }, [selectedDate, seances]);
+
+  useEffect(() => {
+    // Принудительно обновляем компонент при изменении времени
+  }, [currentTime]);
 
   const loadData = async () => {
     setLoading(true);
@@ -46,37 +59,26 @@ const MainPage = () => {
       const apiHalls = data.halls || [];
       const apiSeances = data.seances || [];
       
-      // Обрабатываем сеансы
-      const processedSeances = apiSeances.map(seance => {
-        let seanceDateTime = new Date();
-        
-        if (seance.seance_date) {
-          seanceDateTime = parseISO(seance.seance_date);
-        } else {
-          const today = new Date();
-          const timeParts = seance.seance_time ? seance.seance_time.split(':') : ['12', '00'];
-          seanceDateTime = new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            today.getDate(),
-            parseInt(timeParts[0]),
-            parseInt(timeParts[1]),
-            0
-          );
-        }
-        
-        return {
-          ...seance,
-          id: seance.id || seance.seance_id,
-          movieId: seance.filmId || seance.seance_filmid,
-          hallId: seance.hallId || seance.seance_hallid,
-          startTime: seanceDateTime,
-          date: seanceDateTime,
-          seance_time: seance.seance_time || format(seanceDateTime, 'HH:mm')
-        };
-      });
+// В MainPage.js убедитесь, что сеансы имеют правильное время
+const processedSeances = apiSeances.map(seance => {
+  const seanceTime = seance.seance_time || '12:00';
+  
+  return {
+    ...seance,
+    id: seance.id || seance.seance_id,
+    movieId: seance.filmId || seance.seance_filmid,
+    hallId: seance.hallId || seance.seance_hallid,
+    seance_time: seanceTime, // Только время, например "16:30"
+    date: null
+  };
+});
       
-      processedSeances.sort((a, b) => a.startTime - b.startTime);
+      // Сортируем по времени
+      processedSeances.sort((a, b) => {
+        const timeA = a.seance_time;
+        const timeB = b.seance_time;
+        return timeA.localeCompare(timeB);
+      });
       
       setMovies(apiMovies);
       setHalls(apiHalls);
@@ -92,14 +94,10 @@ const MainPage = () => {
   };
 
   const filterSeancesByDate = (seancesList = seances) => {
+    // Показываем все сеансы, но фильтруем только по открытым залам
     const filtered = seancesList.filter(seance => {
       const hall = getHallById(seance.hallId || seance.seance_hallid);
-      if (!hall || hall.hall_open !== 1) return false;
-      
-      if (seance.date) {
-        return isSameDay(new Date(seance.date), selectedDate);
-      }
-      return false;
+      return hall && hall.hall_open === 1;
     });
     
     setFilteredSeances(filtered);
@@ -109,14 +107,70 @@ const MainPage = () => {
     setSelectedDate(date);
   };
 
-  const handleTimeClick = (seanceId) => {
-    navigate(`/hall/${seanceId}`);
+  const handleTimeClick = (seanceId, isDisabled) => {
+    if (isDisabled) return;
+    
+    // Передаем выбранную дату в параметрах
+    const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+    navigate(`/hall/${seanceId}?date=${selectedDateStr}`);
+  };
+
+  // Проверяем, прошло ли время начала сеанса (только для сегодняшнего дня)
+const isSeanceTimePassed = (seance) => {
+  // Если выбран не сегодняшний день, сеансы всегда доступны
+  if (!isToday(selectedDate)) {
+    return false;
+  }
+  
+  try {
+    // Получаем время сеанса из строки формата "HH:mm"
+    const timeParts = seance.seance_time.split(':');
+    const seanceHours = parseInt(timeParts[0]);
+    const seanceMinutes = parseInt(timeParts[1]);
+    
+    // Создаем объект Date с сегодняшней датой и временем сеанса
+    const seanceDateTime = new Date();
+    seanceDateTime.setHours(seanceHours, seanceMinutes, 0, 0);
+    
+    // Сравниваем с текущим временем
+    return seanceDateTime < currentTime;
+  } catch (error) {
+    console.error('Ошибка проверки времени сеанса:', error);
+    return false;
+  }
+};
+
+  // Получить массив дат для отображения
+  const getDatesToShow = () => {
+    const dates = [];
+    const today = new Date();
+    const startDate = addDays(today, dateOffset);
+    
+    for (let i = 0; i < DAYS_TO_SHOW; i++) {
+      dates.push(addDays(startDate, i));
+    }
+    return dates;
+  };
+
+  // Сдвинуть даты вперед (вправо)
+  const handleNextDates = () => {
+    setDateOffset(prev => prev + STEP);
+  };
+
+  // Сдвинуть даты назад (влево)
+  const handlePrevDates = () => {
+    const newOffset = dateOffset - STEP;
+    // Не позволяем сдвигать дальше сегодняшнего дня
+    if (addDays(new Date(), newOffset) >= new Date()) {
+      setDateOffset(newOffset);
+    } else {
+      // Если пытаемся сдвинуть раньше сегодня, устанавливаем на сегодня
+      setDateOffset(0);
+    }
   };
 
   const formatTime = (timeValue) => {
     try {
-      if (timeValue instanceof Date) return format(timeValue, 'HH:mm');
-      if (typeof timeValue === 'number') return format(new Date(timeValue), 'HH:mm');
       if (typeof timeValue === 'string' && timeValue.includes(':')) return timeValue;
       return '--:--';
     } catch (error) {
@@ -130,14 +184,6 @@ const MainPage = () => {
     const hours = Math.floor(minutesNum / 60);
     const mins = minutesNum % 60;
     return `${hours}ч ${mins}мин`;
-  };
-
-  const getWeekDates = () => {
-    const dates = [];
-    for (let i = 0; i < 7; i++) {
-      dates.push(addDays(new Date(), i));
-    }
-    return dates;
   };
 
   const getSeancesByMovie = () => {
@@ -186,15 +232,17 @@ const MainPage = () => {
 
   const seancesByMovie = getSeancesByMovie();
   const selectedDateStr = format(selectedDate, 'd MMMM yyyy', { locale: ru });
+  const datesToShow = getDatesToShow();
+  const showPrevButton = dateOffset > 0;
 
   return (
     <Container className="main-page">
       <header className="user-page__header">
-        <div className="user-page__logo">
+        <Link to="/" className="user-page__logo" style={{ textDecoration: 'none' }}>
           <span className="user-page__logo-bold">ИДЁМ</span>
           <span className="user-page__logo-thin">В</span>
           <span className="user-page__logo-bold">КИНО</span>
-        </div>
+        </Link>
         
         <button
           onClick={() => navigate('/admin/login')}
@@ -205,47 +253,73 @@ const MainPage = () => {
       </header>
 
       <nav className="main-page__date-picker">
-        <div className="date-picker__days">
-          {getWeekDates().map((date, index) => {
-            const isActive = format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
-            const isTodayDate = isToday(date);
-            const dayOfWeek = date.getDay();
+        <div className="date-picker__container" ref={dateContainerRef}>
+          {/* Кнопка навигации назад (влево) - появляется после первого сдвига */}
+          {showPrevButton && (
+            <button
+              className="date-picker__nav-btn date-picker__nav-btn--prev"
+              onClick={handlePrevDates}
+              aria-label="Предыдущие даты"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
+          
+          <div className="date-picker__days">
+            {datesToShow.map((date, index) => {
+              const isActive = isSameDay(date, selectedDate);
+              const isTodayDate = isToday(date);
                      
-            const dayAbbreviation = format(date, 'EEEEEE', { locale: ru });
-            const dayName = dayAbbreviation.charAt(0).toUpperCase() + dayAbbreviation.slice(1);
-            const dayOfMonth = format(date, 'd', { locale: ru });
-            
-            return (
-              <button
-                key={index}
-                className={`date-picker__day-btn ${isActive ? 'date-picker__day-btn--active' : ''}`}
-                onClick={() => handleDateSelect(date)}
-              >
-                <div className="date-picker__day-name">
-                  {isTodayDate ? 'Сегодня' : dayName + ','}
-                </div>
-                <div className="date-picker__date">
-                  <small className="date-picker__date-text">
-                    {isTodayDate ? dayName + ',' + dayOfMonth : dayOfMonth}
-                  </small>
-                </div>
-              </button>
-            );
-          })}
+              const dayAbbreviation = format(date, 'EEEEEE', { locale: ru });
+              const dayName = dayAbbreviation.charAt(0).toUpperCase() + dayAbbreviation.slice(1);
+              const dayOfMonth = format(date, 'd', { locale: ru });
+              
+              return (
+                <button
+                  key={index}
+                  className={`date-picker__day-btn ${isActive ? 'date-picker__day-btn--active' : ''} ${isTodayDate ? 'date-picker__day-btn--today' : ''}`}
+                  onClick={() => handleDateSelect(date)}
+                >
+                  <div className="date-picker__day-name">
+                    {isTodayDate ? 'Сегодня' : dayName}
+                  </div>
+                  <div className="date-picker__date">
+                    {dayOfMonth}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          
+          {/* Кнопка навигации вперед (вправо) - всегда видна */}
+          <button
+            className="date-picker__nav-btn date-picker__nav-btn--next"
+            onClick={handleNextDates}
+            aria-label="Следующие даты"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
         </div>
       </nav>
 
       <main className="main-page__content">
-        {Object.keys(seancesByMovie).length === 0 ? (
-          
+        {filteredSeances.length === 0 ? (
           <Alert variant="info" className="content_card main-page__no-sessions">
-            На {selectedDateStr} сеансов нет. Выберите другую дату.
+            Сеансов нет.
           </Alert>
         ) : (
           <div className="movie-schedule">
-            {Object.entries(seancesByMovie).map(([movieId, movieSeances]) => {
-              const movie = getMovieById(Number(movieId));
-              if (!movie) return null;
+            {movies.map(movie => {
+              const movieId = movie.id;
+              const movieSeances = filteredSeances.filter(seance => 
+                seance.movieId === movieId || seance.seance_filmid === movieId
+              );
+
+              if (movieSeances.length === 0) return null;
 
               const sortedSeances = [...movieSeances].sort((a, b) => {
                 const timeA = a.seance_time || formatTime(a.startTime);
@@ -270,7 +344,7 @@ const MainPage = () => {
               const movieCountry = movie.country || '';
 
               return (
-                <Card key={movieId} className="content_card">
+                <div key={movieId} className="content_card movie-card">
                   <div className="movie-card__content">
                     <div className="movie-card__info">
                       <div className="movie-card__poster">
@@ -278,6 +352,10 @@ const MainPage = () => {
                           src={getPosterUrl(movie)}
                           alt={movieTitle}
                           className="movie-card__poster-img"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(movieTitle)}`;
+                          }}
                         />
                       </div>
                       
@@ -301,7 +379,6 @@ const MainPage = () => {
                           )}
                           {movieCountry && (
                             <>
-                              
                               <span className="movie-card__country">
                                 <i className="bi bi-globe me-1"></i>
                                 {movieCountry}
@@ -322,12 +399,14 @@ const MainPage = () => {
                           <div className="movie-sessions__list">
                             {hallSeances.map(seance => {
                               const time = seance.seance_time || formatTime(seance.startTime);
+                              const isDisabled = isSeanceTimePassed(seance);
                               
                               return (
                                 <button
                                   key={seance.id}
-                                  className="movie-sessions__time-btn"
-                                  onClick={() => handleTimeClick(seance.id)}
+                                  className={`movie-sessions__time-btn ${isDisabled ? 'movie-sessions__time-btn--disabled' : ''}`}
+                                  onClick={() => handleTimeClick(seance.id, isDisabled)}
+                                  disabled={isDisabled}
                                 >
                                   {time}
                                 </button>
@@ -338,7 +417,7 @@ const MainPage = () => {
                       ))}
                     </div>
                   </div>
-                </Card>
+                </div>
               );
             })}
           </div>

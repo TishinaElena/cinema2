@@ -82,7 +82,7 @@ label, small, strong, em {
 }
 
 .user-page__logo {
- 
+
   font-size: 34px;
   line-height: 39px;
   letter-spacing: 0%;
@@ -91,6 +91,7 @@ label, small, strong, em {
   align-items: center;
   color: white;
 }
+
 
 .user-page__logo-bold {
   font-weight: 900;
@@ -137,15 +138,86 @@ label, small, strong, em {
 }
 
 
-/* ===== DATE PICKER СТИЛИ ===== */
-.main-page__date-picker {
-  width: 100%;
+/* Стили для панели выбора даты */
+.date-picker__container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 30px;
+  position: relative;
+  gap: 4px; /* Уменьшаем gap для плотного прилегания */
+  width: 100%;
+}
+
+.date-picker__nav-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 2px;
+  margin: 0 1px;
+  flex: 1;
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid #F1EBE6;
+  background-color: rgba(248, 249, 250, 0.9);
+  color: #000000;
+  padding: 10px 0;
+  height: 48px;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.12);
+  min-width: 40px; /* Фиксированная минимальная ширина для стрелок */
+  max-width: 48px; /* Максимальная ширина */
+  flex-shrink: 0;
+}
+
+.date-picker__nav-btn:hover {
+  border-color: #007bff;
+  background-color: #f8f9fa;
+}
+
+.date-picker__nav-btn--prev {
+  margin-right: 0;
+}
+
+.date-picker__nav-btn--next {
+  margin-left: 0;
+}
+
+/* Стили для стрелок */
+.date-picker__nav-arrow {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid #000000;
+  border-right: 2px solid #000000;
+  transition: all 0.2s ease;
+}
+
+.date-picker__nav-btn--prev .date-picker__nav-arrow {
+  transform: rotate(-135deg);
+  margin-right: 1px;
+}
+
+.date-picker__nav-btn--next .date-picker__nav-arrow {
+  transform: rotate(45deg);
+  margin-left: 1px;
+}
+
+.date-picker__nav-btn:hover .date-picker__nav-arrow {
+  border-color: #007bff;
 }
 
 .date-picker__days {
   display: flex;
-  align-items: flex-end;
+  width: 100%;
+  overflow-x: auto;
+  padding: 10px 0;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.date-picker__days::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .date-picker__day-btn {
@@ -154,7 +226,7 @@ label, small, strong, em {
   justify-content: center;
   border-radius: 2px;
   margin: 0 1px;
-  flex: 1;
+  flex: 1; /* Равномерное распределение ширины */
   text-align: left;
   cursor: pointer;
   border: 1px solid #F1EBE6;
@@ -164,31 +236,124 @@ label, small, strong, em {
   padding: 10px 20px;
   height: 48px;
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.12);
+  min-width: 0; /* Разрешаем сжатие */
+  flex-shrink: 0; /* Запрещаем сжатие ниже минимальной ширины */
+}
+
+.date-picker__day-btn:hover {
+  border-color: rgba(241, 235, 230, 0.95);
+  background-color: #f8f9fa;
 }
 
 .date-picker__day-btn--active {
   background-color: #ffffff;
   color: #000000;
-  padding: 1rem 0.5rem;
-  height: 52px;
-}
-
-.date-picker__day-name {
-  font-weight: 400;
-  margin-bottom: 1px;
-}
-
-.date-picker__day-btn--active .date-picker__date-text {
-  color: rgba(0, 0, 0, 1);
-  font-weight: 700;
+  border-color: #F1EBE6;
+  height: 52px; /* Немного выше обычных кнопок */
+  margin-top: -2px; /* Компенсируем увеличение высоты */
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.12); /* Более выраженная тень */
 }
 
 .date-picker__day-btn--active .date-picker__day-name {
   font-weight: 700;
 }
 
-.date-picker__day-btn:not(.date-picker__day-btn--active) .date-picker__date-text {
-  color: #000000;
+.date-picker__day-btn--active .date-picker__date {
+  font-weight: 700;
+}
+
+.date-picker__day-btn--today {
+  border-color: rgba(241, 235, 230, 0.95);
+}
+
+.date-picker__day-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 2px;
+  text-transform: none;
+}
+
+.date-picker__date {
+  font-size: 1rem;
+  font-weight: normal;
+}
+
+/* Стиль для сегодняшнего дня */
+.date-picker__day-btn--today .date-picker__day-name {
+  font-weight: 600;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .date-picker__container {
+    gap: 2px;
+  }
+  
+  .date-picker__nav-btn {
+    min-width: 36px;
+    max-width: 40px;
+    height: 44px;
+    padding: 8px 0;
+  }
+  
+  .date-picker__nav-arrow {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .date-picker__day-btn {
+    padding: 8px 12px;
+    height: 44px;
+    font-size: 11px;
+  }
+  
+  .date-picker__day-btn--active {
+    height: 46px;
+  }
+  
+  .date-picker__day-name {
+    font-size: 0.75rem;
+  }
+  
+  .date-picker__date {
+    font-size: 0.9rem;
+  }
+}
+
+
+
+@media (max-width: 576px) {
+  .date-picker__nav-btn {
+    min-width: 32px;
+    max-width: 36px;
+    height: 40px;
+    padding: 6px 0;
+  }
+  
+  .date-picker__nav-arrow {
+    width: 6px;
+    height: 6px;
+    border-width: 1.5px;
+  }
+  
+  .date-picker__day-btn {
+    padding: 6px 8px;
+    height: 40px;
+    font-size: 10px;
+  }
+  
+  .date-picker__day-btn--active {
+    height: 42px;
+  }
+  
+  .date-picker__day-name {
+    font-size: 0.7rem;
+    margin-bottom: 1px;
+  }
+  
+  .date-picker__date {
+    font-size: 0.85rem;
+  }
 }
 
 /* ===== MOVIE CARDS СТИЛИ ===== */
@@ -286,6 +451,23 @@ label, small, strong, em {
 .movie-sessions__time-btn:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
+
+ 
+}
+
+ /* Стили для заблокированных кнопок времени сеанса */
+.movie-sessions__time-btn--disabled {
+  background-color: #f5f5f5 !important;
+  border-color: #e0e0e0 !important;
+  color: #000000 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.movie-sessions__time-btn--disabled:hover {
+  background-color: #f5f5f5 !important;
+  border-color: #e0e0e0 !important;
+  color: #999 !important;
 }
 
 /* ===== LOADING & ERROR СТИЛИ ===== */

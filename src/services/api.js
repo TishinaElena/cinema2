@@ -582,9 +582,25 @@ async login(credentials) {
 async bookTickets(bookingData) {
   console.log('Booking data:', bookingData);
   
+  // Проверяем обязательные поля
+  if (!bookingData.seanceId) {
+    throw new Error('ID сеанса обязателен');
+  }
+  
+  if (!bookingData.ticketDate) {
+    throw new Error('Дата сеанса обязательна');
+  }
+  
+  if (!bookingData.tickets || !Array.isArray(bookingData.tickets) || bookingData.tickets.length === 0) {
+    throw new Error('Не выбрано ни одного места');
+  }
+  
   const formData = new URLSearchParams();
   formData.append('seanceId', bookingData.seanceId.toString());
-  formData.append('ticketDate', bookingData.ticketDate);
+  
+  // Форматируем дату для API
+  const formattedDate = this.formatDateForAPI(bookingData.ticketDate);
+  formData.append('ticketDate', formattedDate);
   
   // Важно: параметр должен быть 'tickets', а не 'ticketsJSON'
   const ticketsJSON = JSON.stringify(bookingData.tickets);
@@ -636,53 +652,74 @@ async bookTickets(bookingData) {
   }
 }
 
-  async getHallConfig(seanceId, date) {
-    try {
-      const result = await this.request(`/hallconfig?seanceId=${seanceId}&date=${date}`, {
-        method: 'GET',
-      });
-      
-      return result || [];
-      
-    } catch (error) {
-      console.error('Error in getHallConfig:', error);
+async getHallConfig(seanceId, date) {
+  try {
+    // Форматируем дату в правильный формат (YYYY-MM-DD)
+    const formattedDate = this.formatDateForAPI(date);
+    
+    console.log(`Getting hall config for seance ${seanceId}, date: ${formattedDate}`);
+    
+    const result = await this.request(`/hallconfig?seanceId=${seanceId}&date=${formattedDate}`, {
+      method: 'GET',
+    });
+    
+    console.log('Hall config result:', result);
+    
+    // Проверяем результат
+    if (!result || !Array.isArray(result)) {
+      console.warn('Invalid hall config format:', result);
       return [];
     }
+    
+    return result;
+    
+  } catch (error) {
+    console.error('Error in getHallConfig:', error);
+    return [];
   }
+}
 
-  async getTakenSeats(seanceId) {
-    try {
-      const date = new Date().toISOString().split('T')[0];
-      const config = await this.getHallConfig(seanceId, date);
-      
-      if (!Array.isArray(config)) {
-        return [];
-      }
-      
-      const takenSeats = [];
-      
-      config.forEach((row, rowIndex) => {
-        if (!Array.isArray(row)) return;
-        
-        row.forEach((seatType, seatIndex) => {
-          if (seatType === 'taken') {
-            takenSeats.push({
-              id: (rowIndex * row.length) + seatIndex + 1,
-              row: rowIndex + 1,
-              seat: seatIndex + 1,
-              seatType: 'taken'
-            });
-          }
-        });
-      });
-      
-      return takenSeats;
-      
-    } catch (error) {
-      console.error('Error in getTakenSeats:', error);
+// === ПОЛУЧЕНИЕ ЗАНЯТЫХ МЕСТ ===
+async getTakenSeats(seanceId, date = null) {
+  try {
+    // Используем переданную дату или текущую дату
+    const ticketDate = date || new Date().toISOString().split('T')[0];
+    
+    console.log(`Getting taken seats for seance ${seanceId}, date: ${ticketDate}`);
+    
+    // Получаем конфигурацию зала для указанной даты
+    const config = await this.getHallConfig(seanceId, ticketDate);
+    
+    if (!Array.isArray(config)) {
+      console.warn('Invalid config format received:', config);
       return [];
     }
+    
+    const takenSeats = [];
+    
+    config.forEach((row, rowIndex) => {
+      if (!Array.isArray(row)) return;
+      
+      row.forEach((seatType, seatIndex) => {
+        if (seatType === 'taken') {
+          takenSeats.push({
+            id: (rowIndex * row.length) + seatIndex + 1,
+            row: rowIndex + 1,
+            seat: seatIndex + 1,
+            seatType: 'taken'
+          });
+        }
+      });
+    });
+    
+    console.log(`Found ${takenSeats.length} taken seats`);
+    return takenSeats;
+    
+  } catch (error) {
+    console.error('Error in getTakenSeats:', error);
+    return [];
   }
+}
 
   async getBookedTickets() {
     try {
@@ -702,6 +739,60 @@ async bookTickets(bookingData) {
       console.log('Failed to remove token from localStorage:', e);
     }
   }
+
+  // Форматирование даты для API (YYYY-MM-DD)
+formatDateForAPI(dateInput) {
+  if (!dateInput) {
+    // Возвращаем текущую дату, если ничего не передано
+    return new Date().toISOString().split('T')[0];
+  }
+  
+  // Если это строка в формате ISO
+  if (typeof dateInput === 'string' && dateInput.includes('T')) {
+    return dateInput.split('T')[0];
+  }
+  
+  // Если это строка в формате YYYY-MM-DD
+  if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+    return dateInput;
+  }
+  
+  // Если это объект Date
+  if (dateInput instanceof Date) {
+    return dateInput.toISOString().split('T')[0];
+  }
+  
+  // Для других случаев пытаемся создать Date
+  try {
+    const date = new Date(dateInput);
+    return date.toISOString().split('T')[0];
+  } catch {
+    // Если ничего не получилось, возвращаем текущую дату
+    return new Date().toISOString().split('T')[0];
+  }
+}
+
+isValidSeanceDate(dateString) {
+  try {
+    // Форматируем дату
+    const formattedDate = this.formatDateForAPI(dateString);
+    
+    // Проверяем формат
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(formattedDate)) {
+      return false;
+    }
+    
+    // Проверяем, что дата не в прошлом
+    const seanceDate = new Date(formattedDate + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return seanceDate >= today;
+  } catch {
+    return false;
+  }
+}
 
   // Проверка авторизации
   isAuthenticated() {
