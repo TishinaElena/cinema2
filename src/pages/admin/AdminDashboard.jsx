@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Container,
@@ -9,17 +9,168 @@ import {
   Row,
   Col,
   Modal,
-  Dropdown,
-  Table,
-  Badge,
   ListGroup,
-  ButtonGroup,
-  Accordion,
-  Image,
-  CloseButton
+  Image
 } from 'react-bootstrap';
-import { cinemaAPI as ApiService } from '../../services/api'; // Измененная строка импорта
+import { cinemaAPI as ApiService } from '../../services/api';
 import { useData } from '../../contexts/DataContext';
+
+// Стилизованное модальное окно
+const StyledModal = ({ show, onHide, title, children, size = "md" }) => {
+  return (
+    <Modal 
+      show={show} 
+      onHide={onHide} 
+      size={size}
+      centered
+      dialogClassName="custom-modal"
+    >
+      <Modal.Header style={{
+        height: '57px',
+        backgroundColor: 'rgba(99, 83, 108, 1)',
+        borderBottom: 'none',
+        padding: '16px 24px',
+        display: 'flex',
+        alignItems: 'center'
+      }}>
+        <Modal.Title style={{
+          fontFamily: 'Roboto',
+          fontWeight: 700,
+          fontSize: '22px',
+          lineHeight: '25px',
+          letterSpacing: '0%',
+          textTransform: 'uppercase',
+          color: '#ffffff',
+          margin: 0,
+          flex: 1
+        }}>
+          {title}
+        </Modal.Title>
+        <button
+          type="button"
+          onClick={onHide}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '0',
+            marginLeft: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '24px',
+            height: '24px'
+          }}
+        >
+          <span style={{
+            fontSize: '24px',
+            color: '#000000',
+            lineHeight: '1'
+          }}>×</span>
+        </button>
+      </Modal.Header>
+      <Modal.Body style={{
+        backgroundColor: 'rgba(234, 233, 235, 0.95)',
+        padding: '24px'
+      }}>
+        {children}
+      </Modal.Body>
+    </Modal>
+  );
+};
+
+// Стилизованное модальное окно с футером
+const StyledModalWithFooter = ({ show, onHide, title, children, onConfirm, confirmText = "Удалить", confirmVariant = "danger", size = "md" }) => {
+  return (
+    <Modal 
+      show={show} 
+      onHide={onHide} 
+      size={size}
+      centered
+      dialogClassName="custom-modal"
+    >
+      <Modal.Header style={{
+        height: '57px',
+        backgroundColor: 'rgba(99, 83, 108, 1)',
+        borderBottom: 'none',
+        padding: '16px 24px',
+        display: 'flex',
+        alignItems: 'center'
+      }}>
+        <Modal.Title style={{
+          fontFamily: 'Roboto',
+          fontWeight: 700,
+          fontSize: '22px',
+          lineHeight: '25px',
+          letterSpacing: '0%',
+          textTransform: 'uppercase',
+          color: '#ffffff',
+          margin: 0,
+          flex: 1
+        }}>
+          {title}
+        </Modal.Title>
+        <button
+          type="button"
+          onClick={onHide}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '0',
+            marginLeft: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '24px',
+            height: '24px'
+          }}
+        >
+          <span style={{
+            fontSize: '24px',
+            color: '#000000',
+            lineHeight: '1'
+          }}>×</span>
+        </button>
+      </Modal.Header>
+      <Modal.Body style={{
+        backgroundColor: 'rgba(234, 233, 235, 0.95)',
+        padding: '24px'
+      }}>
+        {children}
+      </Modal.Body>
+      <Modal.Footer style={{
+  backgroundColor: 'rgba(234, 233, 235, 0.95)',
+  borderTop: 'none',
+  padding: '16px 24px 24px 24px',
+  display: 'flex',
+  justifyContent: 'center', // Изменено с flex-end на center
+  gap: '12px'
+}}>
+        <Button 
+          className="button white-button" 
+          variant="secondary" 
+          onClick={onHide}
+          style={{
+            minWidth: '120px'
+          }}
+        >
+          Отмена
+        </Button>
+        <Button 
+          className="button" 
+          variant={confirmVariant} 
+          onClick={onConfirm}
+          style={{
+            minWidth: '120px'
+          }}
+        >
+          {confirmText}
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
 
 const AdminSection = ({ title, children, initiallyOpen = false, className = '' }) => {
   const [isOpen, setIsOpen] = useState(initiallyOpen);
@@ -49,6 +200,8 @@ const HallsManagement = () => {
   const { halls, refreshData } = useData();
   const [newHallName, setNewHallName] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [hallToDelete, setHallToDelete] = useState(null);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ show: false, type: '', message: '' });
 
@@ -74,16 +227,23 @@ const HallsManagement = () => {
     }
   };
 
-  const handleDeleteHall = async (id) => {
-    if (window.confirm('Вы уверены, что хотите удалить этот зал? Все связанные сеансы также будут удалены.')) {
-      try {
-        await ApiService.deleteHall(id);
-        await refreshData();
-        //setNotification({ show: true, type: 'success', message: 'Зал успешно удален' });
-      } catch (error) {
-        console.error('Failed to delete hall:', error);
-        //setNotification({ show: true, type: 'error', message: 'Не удалось удалить зал' });
-      }
+  const handleDeleteClick = (hall) => {
+    setHallToDelete(hall);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteHall = async () => {
+    if (!hallToDelete) return;
+    
+    try {
+      await ApiService.deleteHall(hallToDelete.id);
+      await refreshData();
+      setShowDeleteModal(false);
+      setHallToDelete(null);
+      //setNotification({ show: true, type: 'success', message: 'Зал успешно удален' });
+    } catch (error) {
+      console.error('Failed to delete hall:', error);
+      //setNotification({ show: true, type: 'error', message: 'Не удалось удалить зал' });
     }
   };
 
@@ -109,7 +269,7 @@ const HallsManagement = () => {
                 <span className="fw-bold me-2"> - {hall.hall_name}</span>
                 <div className=" d-flex align-items-center">
                   <button 
-                    onClick={() => handleDeleteHall(hall.id)}
+                    onClick={() => handleDeleteClick(hall)}
                     className="btn btn-link p-0 border-0 d-flex align-items-center justify-content-center"
                     style={{ 
                       width: '12px', 
@@ -140,7 +300,7 @@ const HallsManagement = () => {
 
       <div className="text-left">
         <Button 
-        className='button'
+          className='button'
           variant="primary" 
           onClick={() => setShowCreateModal(true)}
         >
@@ -148,52 +308,66 @@ const HallsManagement = () => {
         </Button>
       </div>
 
-      {/* Модальное окно создания зала */}
-      <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Добавление зала</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form onSubmit={handleCreateHall}>
-            <Form.Group className="mb-3">
-              <Form.Label>Название зала</Form.Label>
-              <Form.Control
-                type="text"
-                value={newHallName}
-                onChange={e => setNewHallName(e.target.value)}
-                placeholder="Например, «Зал 1»"
-                required
-              />
-              <Form.Text className="text-muted">
-                Укажите уникальное название для зала
-              </Form.Text>
-            </Form.Group>
-            
-            <div className="d-flex justify-content-end gap-2">
-              <Button 
-                variant="secondary" 
-                onClick={() => setShowCreateModal(false)}
-              >
-                Отмена
-              </Button>
-              <Button 
-                variant="primary" 
-                type="submit"
-                disabled={loading}
-              >
-                {loading ? 'Создание...' : 'Создать зал'}
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal>
+      <StyledModal 
+        show={showCreateModal} 
+        onHide={() => setShowCreateModal(false)}
+        title="Добавление зала"
+      >
+        <Form onSubmit={handleCreateHall}>
+          <Form.Group className="mb-3">
+            <Form.Label>Название зала</Form.Label>
+            <Form.Control
+              type="text"
+              value={newHallName}
+              onChange={e => setNewHallName(e.target.value)}
+              placeholder="Например, «Зал 1»"
+              required
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                borderRadius: '3px'
+              }}
+            />
+            <Form.Text className="text-muted">
+              Укажите уникальное название для зала
+            </Form.Text>
+          </Form.Group>
+          
+          <div className="d-flex justify-content-center gap-2">
+            <Button 
+              className="button white-button"
+              variant="secondary" 
+              onClick={() => setShowCreateModal(false)}
+            >
+              Отмена
+            </Button>
+            <Button 
+              className="button btn-danger"
+              variant="primary" 
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? 'Создание...' : 'Создать зал'}
+            </Button>
+          </div>
+        </Form>
+      </StyledModal>
+
+      <StyledModalWithFooter 
+        show={showDeleteModal} 
+        onHide={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteHall}
+        title="Подтверждение удаления"
+        confirmText="Удалить"
+        confirmVariant="danger"
+      >
+        <p style={{ marginBottom: '8px' }}>Вы уверены, что хотите удалить зал <strong>{hallToDelete?.hall_name}</strong>?</p>
+        
+      </StyledModalWithFooter>
     </>
   );
 };
 
-
-// Компонент для конфигурации залов
-// Компонент для конфигурации залов
 const HallConfiguration = () => {
   const { halls, refreshData } = useData();
   const [selectedHallId, setSelectedHallId] = useState('');
@@ -311,7 +485,7 @@ const HallConfiguration = () => {
       {selectedHallId && (
         <>
           <Row className="mb-4">
-            <div className="mb-2">Укажите количество рядов  и максимальное количество кресел в ряду:</div>
+            <div className="mb-2">Укажите количество рядов и максимальное количество кресел в ряду:</div>
             <div className="d-flex align-items-end gap-3">
               <div style={{ flex: '0 0 120px' }}>
                 <div style={{
@@ -332,7 +506,10 @@ const HallConfiguration = () => {
                   min="1"
                   style={{
                     height: '38px',
-                    padding: '8px 12px'
+                    padding: '8px 12px',
+                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                    borderRadius: '3px'
                   }}
                 />
               </div>
@@ -365,7 +542,10 @@ const HallConfiguration = () => {
                   min="1"
                   style={{
                     height: '38px',
-                    padding: '8px 12px'
+                    padding: '8px 12px',
+                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                    borderRadius: '3px'
                   }}
                 />
               </div>
@@ -429,21 +609,21 @@ const HallConfiguration = () => {
           <Card className="mb-4 seat-config-card" style={{ border: '1px solid rgba(0, 0, 0, 1)' }}>
             <Card.Body>
               <div className="text-center mb-2 pb-2">
-      <h5 style={{
-        fontFamily: 'Roboto',
-        fontWeight: 400,
-        fontSize: '16px',
-        lineHeight: '18px',
-        letterSpacing: '19px',
-        textAlign: 'center',
-        textTransform: 'uppercase',
-        margin: 0,
-        color: '#000',
-        paddingLeft: '15px',
-      }}>
-        ЭКРАН
-      </h5>
-    </div>
+                <h5 style={{
+                  fontFamily: 'Roboto',
+                  fontWeight: 400,
+                  fontSize: '16px',
+                  lineHeight: '18px',
+                  letterSpacing: '19px',
+                  textAlign: 'center',
+                  textTransform: 'uppercase',
+                  margin: 0,
+                  color: '#000',
+                  paddingLeft: '15px',
+                }}>
+                  ЭКРАН
+                </h5>
+              </div>
               
               <div className="d-flex flex-column align-items-center">
                 {config.map((row, rIndex) => (
@@ -481,7 +661,6 @@ const HallConfiguration = () => {
         </>
       )}
 
-      {/* Добавляем стили для иконок кресел */}
       <style jsx>{`
         .seat-icon {
           width: 20px;
@@ -506,7 +685,6 @@ const HallConfiguration = () => {
   );
 };
 
-// Компонент для конфигурации цен
 const PriceConfiguration = () => {
   const { halls, refreshData } = useData();
   const [selectedHallId, setSelectedHallId] = useState('');
@@ -613,7 +791,10 @@ const PriceConfiguration = () => {
                 style={{
                   width: '100px',
                   height: '36px',
-                  padding: '8px 12px'
+                  padding: '8px 12px',
+                  backgroundColor: 'rgba(255, 255, 255, 1)',
+                  border: '1px solid rgba(0, 0, 0, 0.1)',
+                  borderRadius: '3px'
                 }}
               />
             </div>
@@ -640,7 +821,10 @@ const PriceConfiguration = () => {
                 style={{
                   width: '100px',
                   height: '36px',
-                  padding: '8px 12px'
+                  padding: '8px 12px',
+                  backgroundColor: 'rgba(255, 255, 255, 1)',
+                  border: '1px solid rgba(0, 0, 0, 0.1)',
+                  borderRadius: '3px'
                 }}
               />
             </div>
@@ -689,12 +873,14 @@ const PriceConfiguration = () => {
   );
 };
 
-// Компонент для управления сеансами
 const SeanceManagement = () => {
   const { films, halls, seances, refreshData } = useData();
   const [showFilmModal, setShowFilmModal] = useState(false);
   const [showSeanceModal, setShowSeanceModal] = useState(false);
   const [showTimeModal, setShowTimeModal] = useState(false);
+  const [showDeleteFilmModal, setShowDeleteFilmModal] = useState(false);
+  const [showDeleteSeanceModal, setShowDeleteSeanceModal] = useState(false);
+  
   const [filmName, setFilmName] = useState('');
   const [filmDuration, setFilmDuration] = useState('');
   const [filmDescription, setFilmDescription] = useState('');
@@ -707,7 +893,8 @@ const SeanceManagement = () => {
   
   const [draggedFilmId, setDraggedFilmId] = useState(null);
   const [targetHallId, setTargetHallId] = useState(null);
-  const [dropPosition, setDropPosition] = useState({ x: 0, y: 0 });
+  const [filmToDelete, setFilmToDelete] = useState(null);
+  const [seanceToDelete, setSeanceToDelete] = useState(null);
 
   const draggedFilm = useRef(null);
   const draggedSeanceId = useRef(null);
@@ -722,7 +909,6 @@ const SeanceManagement = () => {
     return colorMap;
   }, [films]);
 
-  // Функция для округления времени до ближайших 15 минут
   const roundTo15Minutes = (minutes) => {
     const remainder = minutes % 15;
     if (remainder < 7.5) {
@@ -732,38 +918,25 @@ const SeanceManagement = () => {
     }
   };
 
-  // Функция для преобразования времени в минуты с округлением
   const roundTimeTo15Minutes = (hours, minutes) => {
     const totalMinutes = hours * 60 + minutes;
     const roundedMinutes = roundTo15Minutes(totalMinutes);
-    
-    // Убедимся, что время в пределах суток
     const finalMinutes = Math.min(Math.max(roundedMinutes, 0), 23 * 60 + 45);
-    
     const roundedHours = Math.floor(finalMinutes / 60);
     const roundedMins = finalMinutes % 60;
-    
     return `${roundedHours.toString().padStart(2, '0')}:${roundedMins.toString().padStart(2, '0')}`;
   };
 
-  // Функция для получения времени из позиции на шкале с округлением
   const getTimeFromPosition = (x, width) => {
     const totalMinutes = 24 * 60;
     const startTimeInMinutes = (x / width) * totalMinutes;
-    
-    // Округляем до ближайших 15 минут
     const roundedMinutes = roundTo15Minutes(startTimeInMinutes);
-    
-    // Ограничиваем время в пределах 0:00 - 23:45
     const finalMinutes = Math.min(Math.max(roundedMinutes, 0), 23 * 60 + 45);
-    
     const hours = Math.floor(finalMinutes / 60);
     const minutes = finalMinutes % 60;
-    
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
 
-  // Функция добавления фильма
   const handleAddFilm = async (e) => {
     e.preventDefault();
     if (!filmPoster) {
@@ -790,21 +963,26 @@ const SeanceManagement = () => {
     }
   };
 
-  // Функция удаления фильма
-  const handleDeleteFilm = async (id) => {
-    if (window.confirm('Вы уверены, что хотите удалить этот фильм? Все связанные сеансы также будут удалены.')) {
-      try {
-        await ApiService.deleteFilm(id);
-        await refreshData();
-        setNotification({ show: true, type: 'success', message: 'Фильм успешно удален' });
-      } catch (error) {
-        console.error('Failed to delete film:', error);
-        setNotification({ show: true, type: 'error', message: 'Не удалось удалить фильм' });
-      }
+  const handleDeleteFilmClick = (film) => {
+    setFilmToDelete(film);
+    setShowDeleteFilmModal(true);
+  };
+
+  const handleDeleteFilm = async () => {
+    if (!filmToDelete) return;
+    
+    try {
+      await ApiService.deleteFilm(filmToDelete.id);
+      await refreshData();
+      setShowDeleteFilmModal(false);
+      setFilmToDelete(null);
+      //setNotification({ show: true, type: 'success', message: 'Фильм успешно удален' });
+    } catch (error) {
+      console.error('Failed to delete film:', error);
+      //setNotification({ show: true, type: 'error', message: 'Не удалось удалить фильм' });
     }
   };
 
-  // Функция добавления сеанса через модальное окно (с округлением)
   const handleAddSeance = async (e) => {
     e.preventDefault();
     if (!seanceHallId || !seanceFilmId || !seanceTime) {
@@ -812,7 +990,6 @@ const SeanceManagement = () => {
       return;
     }
     
-    // Округляем время до 15 минут при отправке
     const [hours, minutes] = seanceTime.split(':').map(Number);
     const roundedTime = roundTimeTo15Minutes(hours, minutes);
     
@@ -826,21 +1003,19 @@ const SeanceManagement = () => {
       await refreshData();
       setShowSeanceModal(false);
       setSeanceHallId(''); setSeanceFilmId(''); setSeanceTime('12:00');
-      //({ show: true, type: 'success', message: `Сеанс успешно добавлен на ${roundedTime}` });
+      //setNotification({ show: true, type: 'success', message: `Сеанс успешно добавлен на ${roundedTime}` });
     } catch (error) {
       console.error('Failed to add seance:', error);
       //setNotification({ show: true, type: 'error', message: 'Не удалось добавить сеанс' });
     }
   };
 
-  // Функция добавления сеанса через перетаскивание
   const handleAddSeanceFromDrag = async () => {
     if (!draggedFilmId || !targetHallId || !seanceTime) {
       setNotification({ show: true, type: 'warning', message: 'Пожалуйста, заполните все поля' });
       return;
     }
     
-    // Округляем время до 15 минут
     const [hours, minutes] = seanceTime.split(':').map(Number);
     const roundedTime = roundTimeTo15Minutes(hours, minutes);
     
@@ -863,12 +1038,37 @@ const SeanceManagement = () => {
     }
   };
 
+  const handleSeanceDragEnd = async () => {
+    if (draggedSeanceId.current && !dropSuccess.current) {
+      const seance = seances.find(s => s.id === draggedSeanceId.current);
+      if (seance) {
+        setSeanceToDelete(seance);
+        setShowDeleteSeanceModal(true);
+      }
+    }
+    draggedSeanceId.current = null;
+  };
+
+  const handleDeleteSeance = async () => {
+    if (!seanceToDelete) return;
+    
+    try {
+      await ApiService.deleteSeance(seanceToDelete.id);
+      await refreshData();
+      setShowDeleteSeanceModal(false);
+      setSeanceToDelete(null);
+      draggedSeanceId.current = null;
+      //setNotification({ show: true, type: 'success', message: 'Сеанс удален' });
+    } catch (e) {
+      //setNotification({ show: true, type: 'error', message: 'Ошибка удаления сеанса' });
+    }
+  };
+
   const timeToMinutes = (time) => {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
   };
 
-  // Обработка начала перетаскивания фильма
   const handleFilmDragStart = (e, film) => {
     draggedFilm.current = film;
     setDraggedFilmId(film.id);
@@ -876,7 +1076,6 @@ const SeanceManagement = () => {
     e.dataTransfer.setData('text/plain', film.id);
   };
 
-  // Обработка окончания перетаскивания фильма
   const handleFilmDragEnd = () => {
     draggedFilm.current = null;
     if (!dropSuccess.current) {
@@ -884,7 +1083,6 @@ const SeanceManagement = () => {
     }
   };
 
-  // Обработка сброса фильма на временную шкалу
   const handleDrop = (e, hallId) => {
     e.preventDefault();
     if (!draggedFilm.current) return;
@@ -894,18 +1092,13 @@ const SeanceManagement = () => {
     
     const rect = e.currentTarget.getBoundingClientRect();
     const dropX = e.clientX - rect.left;
-    setDropPosition({ x: dropX, y: e.clientY - rect.top });
     
-    // Получаем округленное время из позиции сброса
     const roundedTime = getTimeFromPosition(dropX, rect.width);
-    
-    // Устанавливаем округленное время
     setSeanceTime(roundedTime);
     
     setShowTimeModal(true);
   };
 
-  // Проверка пересечения сеансов
   const checkSeanceOverlap = (hallId, filmId, time) => {
     const film = films.find(f => f.id === filmId);
     if (!film) return false;
@@ -925,23 +1118,6 @@ const SeanceManagement = () => {
     return isOverlap;
   };
 
-  // Обработка перетаскивания сеанса (удаление)
-  const handleSeanceDragEnd = async () => {
-    if (draggedSeanceId.current && !dropSuccess.current) {
-      if (window.confirm('Удалить сеанс?')) {
-        try {
-          await ApiService.deleteSeance(draggedSeanceId.current);
-          await refreshData();
-          setNotification({ show: true, type: 'success', message: 'Сеанс удален' });
-        } catch (e) {
-          setNotification({ show: true, type: 'error', message: 'Ошибка удаления сеанса' });
-        }
-      }
-    }
-    draggedSeanceId.current = null;
-  };
-
-  // Функция для отображения времени с округлением
   const displayTime = (time) => {
     const [hours, minutes] = time.split(':').map(Number);
     return roundTimeTo15Minutes(hours, minutes);
@@ -964,10 +1140,7 @@ const SeanceManagement = () => {
         <Button className='button' variant="success" onClick={() => setShowFilmModal(true)}>
           ДОБАВИТЬ ФИЛЬМ
         </Button>
-
       </div>
-
-
 
       <div className="mb-4">
         <div className="d-flex flex-wrap gap-3">
@@ -1051,7 +1224,7 @@ const SeanceManagement = () => {
               
               <button
                 type="button"
-                onClick={() => handleDeleteFilm(film.id)}
+                onClick={() => handleDeleteFilmClick(film)}
                 style={{
                   position: 'absolute',
                   bottom: '2px',
@@ -1135,13 +1308,9 @@ const SeanceManagement = () => {
                       borderRadius: '1px',
                       border: '1px solid rgba(132, 132, 132, 1)',
                       overflow: 'hidden',
-                      marginBottom: '5px',
-                      position: 'relative'
+                      marginBottom: '5px'
                     }}
                   >
-                    {/* Убрали полоски-разделители - оставляем чистую шкалу */}
-                    
-                    {/* Подсказка при перетаскивании */}
                     {draggedFilm.current && (
                       <div style={{
                         position: 'absolute',
@@ -1290,230 +1459,315 @@ const SeanceManagement = () => {
         })}
       </div>
 
-      {/* Модальное окно добавления фильма */}
-      <Modal show={showFilmModal} onHide={() => setShowFilmModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Добавление фильма</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form onSubmit={handleAddFilm}>
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Название фильма</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={filmName}
-                    onChange={e => setFilmName(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Продолжительность (минут)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={filmDuration}
-                    onChange={e => setFilmDuration(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            
-            <Form.Group className="mb-3">
-              <Form.Label>Описание</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                value={filmDescription}
-                onChange={e => setFilmDescription(e.target.value)}
-                required
-              />
-            </Form.Group>
-            
-            <Form.Group className="mb-3">
-              <Form.Label>Страна производства</Form.Label>
-              <Form.Control
-                type="text"
-                value={filmOrigin}
-                onChange={e => setFilmOrigin(e.target.value)}
-                required
-              />
-            </Form.Group>
-            
-            <Form.Group className="mb-4">
-              <Form.Label>Постер фильма (PNG)</Form.Label>
-              <Form.Control
-                type="file"
-                accept="image/png"
-                onChange={e => setFilmPoster(e.target.files?.[0])}
-                required
-              />
-            </Form.Group>
-            
-            <div className="d-flex justify-content-end gap-2">
-              <Button variant="secondary" onClick={() => setShowFilmModal(false)}>
-                Отмена
-              </Button>
-              <Button variant="success" type="submit">
-                Добавить фильм
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal>
+      <StyledModal 
+        show={showFilmModal} 
+        onHide={() => setShowFilmModal(false)}
+        title="Добавление фильма"
+        size="lg"
+      >
+        <Form onSubmit={handleAddFilm}>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Название фильма</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={filmName}
+                  onChange={e => setFilmName(e.target.value)}
+                  required
+                  style={{
+                    backgroundColor: 'rgba(99, 83, 108, 1)',
+                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                    borderRadius: '0px'
+                  }}
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Продолжительность (минут)</Form.Label>
+                <Form.Control
+                  type="number"
+                  value={filmDuration}
+                  onChange={e => setFilmDuration(e.target.value)}
+                  required
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                    borderRadius: '3px'
+                  }}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>Описание</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={filmDescription}
+              onChange={e => setFilmDescription(e.target.value)}
+              required
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                borderRadius: '3px'
+              }}
+            />
+          </Form.Group>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>Страна производства</Form.Label>
+            <Form.Control
+              type="text"
+              value={filmOrigin}
+              onChange={e => setFilmOrigin(e.target.value)}
+              required
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                borderRadius: '3px'
+              }}
+            />
+          </Form.Group>
+          
+          <Form.Group className="mb-4">
+            <Form.Label>Постер фильма (PNG)</Form.Label>
+            <Form.Control
+              type="file"
+              accept="image/png"
+              onChange={e => setFilmPoster(e.target.files?.[0])}
+              required
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                borderRadius: '3px'
+              }}
+            />
+          </Form.Group>
+          
+<div className="d-flex justify-content-center gap-2">
+  <Button className="button white-button" variant="secondary" onClick={() => setShowFilmModal(false)}>
+    Отмена
+  </Button>
+  <Button className="button" variant="success" type="submit">
+    Добавить фильм
+  </Button>
+</div>
+        </Form>
+      </StyledModal>
 
-      {/* Модальное окно добавления сеанса (из кнопки) */}
-      <Modal show={showSeanceModal} onHide={() => setShowSeanceModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Добавление сеанса</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form onSubmit={handleAddSeance}>
-            <Form.Group className="mb-3">
-              <Form.Label>Зал</Form.Label>
-              <Form.Select
-                value={seanceHallId}
-                onChange={e => setSeanceHallId(e.target.value)}
-                required
-              >
-                <option value="">Выберите зал</option>
-                {halls && halls.map(hall => (
-                  <option key={hall.id} value={hall.id}>
-                    {hall.hall_name}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-            
-            <Form.Group className="mb-3">
-              <Form.Label>Фильм</Form.Label>
-              <Form.Select
-                value={seanceFilmId}
-                onChange={e => setSeanceFilmId(e.target.value)}
-                required
-              >
-                <option value="">Выберите фильм</option>
-                {films && films.map(film => (
-                  <option key={film.id} value={film.id}>
-                    {film.film_name} ({film.film_duration} мин.)
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-            
-            <Form.Group className="mb-4">
-              <Form.Label>Время начала (округляется до 15 минут)</Form.Label>
-              <Form.Control
-                type="time"
-                value={seanceTime}
-                onChange={e => setSeanceTime(e.target.value)}
-                step="900" // 15 минут в секундах
-                required
-              />
-              <Form.Text className="text-muted">
-                Время будет округлено до ближайших 15 минут (0, 15, 30, 45)
-              </Form.Text>
-              {seanceHallId && seanceFilmId && seanceTime && 
-                checkSeanceOverlap(seanceHallId, seanceFilmId, displayTime(seanceTime)) && (
-                  <Form.Text className="text-danger">
-                    Внимание! Сеанс пересекается с существующим сеансом.
-                  </Form.Text>
-                )}
-            </Form.Group>
-            
-            <div className="d-flex justify-content-end gap-2">
-              <Button variant="secondary" onClick={() => setShowSeanceModal(false)}>
-                Отмена
-              </Button>
-              <Button variant="primary" type="submit" 
-                disabled={seanceHallId && seanceFilmId && seanceTime && 
-                  checkSeanceOverlap(seanceHallId, seanceFilmId, displayTime(seanceTime))}>
-                Добавить сеанс на {displayTime(seanceTime)}
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal>
+      <StyledModal 
+        show={showSeanceModal} 
+        onHide={() => setShowSeanceModal(false)}
+        title="Добавление сеанса"
+      >
+        <Form onSubmit={handleAddSeance}>
+          <Form.Group className="mb-3">
+            <Form.Label>Зал</Form.Label>
+            <Form.Select
+              value={seanceHallId}
+              onChange={e => setSeanceHallId(e.target.value)}
+              required
+              style={{
+                backgroundColor: 'rgba(99, 83, 108, 1)',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                borderRadius: '3px'
+              }}
+            >
+              <option value="">Выберите зал</option>
+              {halls && halls.map(hall => (
+                <option key={hall.id} value={hall.id}>
+                  {hall.hall_name}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>Фильм</Form.Label>
+            <Form.Select
+              value={seanceFilmId}
+              onChange={e => setSeanceFilmId(e.target.value)}
+              required
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                borderRadius: '3px'
+              }}
+            >
+              <option value="">Выберите фильм</option>
+              {films && films.map(film => (
+                <option key={film.id} value={film.id}>
+                  {film.film_name} ({film.film_duration} мин.)
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          
+          <Form.Group className="mb-4">
+            <Form.Label>Время начала (округляется до 15 минут)</Form.Label>
+            <Form.Control
+              type="time"
+              value={seanceTime}
+              onChange={e => setSeanceTime(e.target.value)}
+              step="900"
+              required
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                borderRadius: '3px'
+              }}
+            />
+            <Form.Text className="text-muted">
+              Время будет округлено до ближайших 15 минут (0, 15, 30, 45)
+            </Form.Text>
+            {seanceHallId && seanceFilmId && seanceTime && 
+              checkSeanceOverlap(seanceHallId, seanceFilmId, displayTime(seanceTime)) && (
+                <Form.Text className="text-danger">
+                  Внимание! Сеанс пересекается с существующим сеансом.
+                </Form.Text>
+              )}
+          </Form.Group>
+          
+          <div className="d-flex justify-content-center gap-2">
+            <Button className="button white-button" variant="secondary" onClick={() => setShowSeanceModal(false)}>
+              Отмена
+            </Button>
+            <Button className="button" variant="primary" type="submit" 
+              disabled={seanceHallId && seanceFilmId && seanceTime && 
+                checkSeanceOverlap(seanceHallId, seanceFilmId, displayTime(seanceTime))}>
+              Добавить сеанс на {displayTime(seanceTime)}
+            </Button>
+          </div>
+        </Form>
+      </StyledModal>
 
-      {/* Модальное окно добавления сеанса (из перетаскивания) */}
-      <Modal show={showTimeModal} onHide={() => {
-        setShowTimeModal(false);
-        setDraggedFilmId(null);
-        setTargetHallId(null);
-      }}>
-        <Modal.Header closeButton>
-          <Modal.Title>Добавление сеанса</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form onSubmit={(e) => {
-            e.preventDefault();
-            handleAddSeanceFromDrag();
-          }}>
-            <Form.Group className="mb-3">
-              <Form.Label>Фильм</Form.Label>
-              <Form.Control
-                type="text"
-                value={films?.find(f => f.id === draggedFilmId)?.film_name || ''}
-                disabled
-                readOnly
-              />
-            </Form.Group>
+      <StyledModal 
+        show={showTimeModal} 
+        onHide={() => {
+          setShowTimeModal(false);
+          setDraggedFilmId(null);
+          setTargetHallId(null);
+        }}
+        title="Добавление сеанса"
+      >
+        <Form onSubmit={(e) => {
+          e.preventDefault();
+          handleAddSeanceFromDrag();
+        }}>
+          <Form.Group className="mb-3">
+            <Form.Label>Фильм</Form.Label>
+            <Form.Control
+              type="text"
+              value={films?.find(f => f.id === draggedFilmId)?.film_name || ''}
+              disabled
+              readOnly
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                borderRadius: '3px'
+              }}
+            />
+          </Form.Group>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>Зал</Form.Label>
+            <Form.Control
+              type="text"
+              value={halls?.find(h => h.id === targetHallId)?.hall_name || ''}
+              disabled
+              readOnly
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                borderRadius: '3px'
+              }}
+            />
+          </Form.Group>
+          
+          <Form.Group className="mb-4">
+            <Form.Label>Время начала (округляется до 15 минут)</Form.Label>
+            <Form.Control
+              type="time"
+              value={seanceTime}
+              onChange={e => setSeanceTime(e.target.value)}
+              step="900"
+              required
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                borderRadius: '3px'
+              }}
+            />
+            <Form.Text className="text-muted">
+              Время автоматически определено из позиции перетаскивания и округлено до 15 минут.
+            </Form.Text>
+            {draggedFilmId && targetHallId && seanceTime && 
+              checkSeanceOverlap(targetHallId, draggedFilmId, displayTime(seanceTime)) && (
+                <Form.Text className="text-danger">
+                  Внимание! Сеанс пересекается с существующим сеансом.
+                </Form.Text>
+              )}
+          </Form.Group>
+          
+          <div className="d-flex justify-content-center gap-2">
+            <Button className="button white-button" variant="secondary" onClick={() => {
+              setShowTimeModal(false);
+              setDraggedFilmId(null);
+              setTargetHallId(null);
+            }}>
+              Отмена
+            </Button>
+            <Button className="button" variant="primary" type="submit" 
+              disabled={draggedFilmId && targetHallId && seanceTime && 
+                checkSeanceOverlap(targetHallId, draggedFilmId, displayTime(seanceTime))}>
+              Добавить сеанс на {displayTime(seanceTime)}
+            </Button>
+          </div>
+        </Form>
+      </StyledModal>
+
+      <StyledModalWithFooter 
+        show={showDeleteFilmModal} 
+        onHide={() => setShowDeleteFilmModal(false)}
+        onConfirm={handleDeleteFilm}
+        title="Удаление фильма"
+        confirmText="Удалить фильм"
+        confirmVariant="danger"
+      >
+        {filmToDelete && (
+          <>
+            <p style={{ marginBottom: '8px' }}>Вы уверены, что хотите удалить фильм <strong>"{filmToDelete.film_name}"</strong>?</p>
             
-            <Form.Group className="mb-3">
-              <Form.Label>Зал</Form.Label>
-              <Form.Control
-                type="text"
-                value={halls?.find(h => h.id === targetHallId)?.hall_name || ''}
-                disabled
-                readOnly
-              />
-            </Form.Group>
-            
-            <Form.Group className="mb-4">
-              <Form.Label>Время начала (округляется до 15 минут)</Form.Label>
-              <Form.Control
-                type="time"
-                value={seanceTime}
-                onChange={e => setSeanceTime(e.target.value)}
-                step="900" // 15 минут в секундах
-                required
-              />
-              <Form.Text className="text-muted">
-                Время автоматически определено из позиции перетаскивания и округлено до 15 минут.
-              </Form.Text>
-              {draggedFilmId && targetHallId && seanceTime && 
-                checkSeanceOverlap(targetHallId, draggedFilmId, displayTime(seanceTime)) && (
-                  <Form.Text className="text-danger">
-                    Внимание! Сеанс пересекается с существующим сеансом.
-                  </Form.Text>
-                )}
-            </Form.Group>
-            
-            <div className="d-flex justify-content-end gap-2">
-              <Button variant="secondary" onClick={() => {
-                setShowTimeModal(false);
-                setDraggedFilmId(null);
-                setTargetHallId(null);
-              }}>
-                Отмена
-              </Button>
-              <Button variant="primary" type="submit" 
-                disabled={draggedFilmId && targetHallId && seanceTime && 
-                  checkSeanceOverlap(targetHallId, draggedFilmId, displayTime(seanceTime))}>
-                Добавить сеанс на {displayTime(seanceTime)}
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal>
+          </>
+        )}
+      </StyledModalWithFooter>
+
+      <StyledModalWithFooter 
+        show={showDeleteSeanceModal} 
+        onHide={() => setShowDeleteSeanceModal(false)}
+        onConfirm={handleDeleteSeance}
+        title="Удаление сеанса"
+        confirmText="Удалить сеанс"
+        confirmVariant="danger"
+      >
+        {seanceToDelete && (
+          <>
+            <p style={{ marginBottom: '8px' }}>Вы уверены, что хотите удалить сеанс?</p>
+            <p className="small mb-0">
+              Фильм: <strong>{films?.find(f => f.id === seanceToDelete.seance_filmid)?.film_name}</strong><br />
+              Зал: <strong>{halls?.find(h => h.id === seanceToDelete.seance_hallid)?.hall_name}</strong><br />
+              Время: <strong>{seanceToDelete.seance_time}</strong>
+            </p>
+          </>
+        )}
+      </StyledModalWithFooter>
     </>
   );
 };
 
-// Компонент для управления продажами
 const SalesManagement = () => {
   const { halls, refreshData } = useData();
   const [selectedHallId, setSelectedHallId] = useState('');
@@ -1561,10 +1815,8 @@ const SalesManagement = () => {
         </Alert>
       )}
       
-       <Form.Group className="mb-4">
+      <Form.Group className="mb-4">
         <div className="mb-3">Выберите зал для открытия/закрытия продаж:</div>
-
-
         <div className="d-flex flex-wrap gap-0 mt-2">
           {halls && halls.map(hall => {
             const isActive = selectedHallId === hall.id;
@@ -1604,18 +1856,15 @@ const SalesManagement = () => {
       </Form.Group>
 
       {selectedHall && (
-        <Card className="text-center" >
-          <Card.Body style={{
-                paddingLeft: '16px'
-                }}>
-        
-            <div  className="mb-2 p-2">
+        <Card className="text-center">
+          <Card.Body style={{ paddingLeft: '16px' }}>
+            <div className="mb-2 p-2">
               {selectedHall.hall_open === 1 ? 'Продажи открыты' : 'Всё готово к открытию'}
             </div>
             
             <div className="mt-4">
               <Button
-              className='button'
+                className='button'
                 variant={selectedHall.hall_open === 1 ? 'danger' : 'success'}
                 size="lg"
                 onClick={() => toggleSales(selectedHall.id)}
@@ -1630,12 +1879,10 @@ const SalesManagement = () => {
   );
 };
 
-// Главный компонент админ-панели
 const AdminDashboard = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Устанавливаем правильные стили для body
     document.body.style.backgroundImage = `url(${process.env.PUBLIC_URL}/images/admin-bg.jpg)`;
     document.body.style.backgroundSize = "cover";
     document.body.style.backgroundAttachment = "fixed";
@@ -1643,11 +1890,9 @@ const AdminDashboard = () => {
     document.body.style.backgroundPosition = "center";
     document.body.style.minHeight = "100vh";
     
-    // Добавляем классы
     document.body.classList.add('admin-page', 'admin-dashboard-page');
     
     return () => {
-      // Восстанавливаем оригинальные стили
       document.body.style.backgroundImage = '';
       document.body.style.backgroundSize = '';
       document.body.style.backgroundAttachment = '';
@@ -1664,13 +1909,11 @@ const AdminDashboard = () => {
       <header className="user-page__header">
         <div className="user-page__logo admin-logo">
           <div className="logo-container">
-            {/* Первая строка */}
             <div className="logo-line logo-main">
               <span className="user-page__logo-bold">ИДЁМ</span>
               <span className="user-page__logo-thin">В</span>
               <span className="user-page__logo-bold">КИНО</span>
             </div>
-            {/* Вторая строка */}
             <div className="logo-line logo-admin">
               АДМИНИСТРАТОРРРСКАЯ
             </div>
@@ -1678,35 +1921,30 @@ const AdminDashboard = () => {
         </div>
       </header>
       <main className="admin-dashboard-main">
-        {/* Управление залами */}
         <div id="halls-management">
           <AdminSection title="УПРАВЛЕНИЕ ЗАЛАМИ" initiallyOpen={true} className="halls-section">
             <HallsManagement />
           </AdminSection>
         </div>
 
-        {/* Конфигурация залов */}
         <div id="hall-configuration">
           <AdminSection title="КОНФИГУРАЦИЯ ЗАЛОВ" className="config-section">
             <HallConfiguration />
           </AdminSection>
         </div>
 
-        {/* Конфигурация цен */}
         <div id="price-configuration">
           <AdminSection title="КОНФИГУРАЦИЯ ЦЕН" className="price-section">
             <PriceConfiguration />
           </AdminSection>
         </div>
 
-        {/* Управление сеансами */}
         <div id="seance-management">
           <AdminSection title="СЕТКА СЕАНСОВ" className="seance-section">
             <SeanceManagement />
           </AdminSection>
         </div>
 
-        {/* Управление продажами */}
         <div id="sales-management">
           <AdminSection title="ОТКРЫТЬ ПРОДАЖИ" className="sales-section">
             <SalesManagement />
@@ -1714,7 +1952,6 @@ const AdminDashboard = () => {
         </div>
       </main>
       
-      {/* Добавляем стили */}
       <style>{`
   .admin-dashboard-main {
     max-width: 962px;
@@ -1794,7 +2031,7 @@ const AdminDashboard = () => {
 
     }
 
-        .admin-dashboard-main .card .card-body {
+    .admin-dashboard-main .card .card-body {
       position: relative;
       padding-left: 105px; /* Отступ для всего контента */
     }
@@ -1803,7 +2040,8 @@ const AdminDashboard = () => {
     .admin-dashboard-main .card.seat-config-card .card-body {
       padding-left: 15px !important; /* Или другое значение, которое вам нужно */
     }
-        .card-line {
+    
+    .card-line {
       position: relative;
       overflow: visible !important;
     }
@@ -1968,7 +2206,6 @@ const AdminDashboard = () => {
     }
   }
 
-
   .draggable-film {
     cursor: grab;
   }
@@ -2011,15 +2248,249 @@ const AdminDashboard = () => {
     padding: 5px 20px !important;
   }
 
-    /* Стили для белой кнопки */
+  /* Стили для белой кнопки */
   .button.white-button {
     background-color: #ffffff !important;
     color: #000000 !important;
     border: 1px solid #00000000 !important;
     box-shadow: 0px 3px 3px 0px rgba(0, 0, 0, 0.24);
   }
-  
 
+  /* Стили для модальных окон */
+.custom-modal {
+  max-width: 960px !important;
+  margin: 0 auto;
+}
+
+.custom-modal .modal-content {
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.custom-modal .modal-header {
+  border-bottom: none;
+}
+
+.custom-modal .modal-body {
+  padding: 0;
+}
+
+/* Убираем растягивание на всю высоту */
+.custom-modal .modal-dialog {
+  margin: 1.75rem auto !important;
+  max-height: 90vh !important;
+  display: flex;
+  align-items: center;
+}
+
+.custom-modal .modal-content {
+  min-height: auto !important;
+  max-height: 90vh !important;
+  overflow: hidden !important;
+}
+
+.custom-modal .modal-body {
+  max-height: calc(90vh - 57px) !important;
+  overflow-y: auto !important;
+  padding: 24px !important;
+}
+
+.custom-modal.modal-footer .modal-body {
+  max-height: calc(90vh - 114px) !important;
+}
+
+/* Стили для полей ввода в модальных окнах */
+.custom-modal .form-control,
+.custom-modal .form-select {
+  background-color: rgba(255, 255, 255, 1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 3px !important;
+  color: #000000 !important;
+}
+
+.custom-modal .form-control:focus,
+.custom-modal .form-select:focus {
+  border-color: rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.1) !important;
+}
+
+.custom-modal .form-label {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: rgba(132, 132, 132, 1);
+  margin-bottom: 4px;
+}
+
+.custom-modal .form-text {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: rgba(132, 132, 132, 1);
+}
+
+/* Стили для кнопок в модальных окнах */
+.custom-modal .modal-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px 24px 24px;
+}
+
+.custom-modal .button {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 900;
+  font-size: 15px;
+  line-height: 16px;
+  letter-spacing: 0%;
+  text-transform: uppercase;
+  border-radius: 3px;
+  border: none;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  text-align: center;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.custom-modal .button:not(.white-button) {
+  background-color: rgba(255, 255, 255, 1) !important;
+  color: #000000 !important;
+  box-shadow: 0px 3px 3px 0px rgba(0, 0, 0, 0.24);
+}
+
+.custom-modal .button:not(.white-button):hover {
+  opacity: 0.9;
+}
+
+.custom-modal .button:not(.white-button):active {
+  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.24);
+  transform: translateY(1px);
+}
+
+.custom-modal .button.white-button {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #00000000 !important;
+  box-shadow: 0px 3px 3px 0px rgba(0, 0, 0, 0.24);
+}
+
+.custom-modal .button.white-button:hover {
+  opacity: 0.9;
+}
+
+.custom-modal .button.white-button:active {
+  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.24);
+  transform: translateY(1px);
+}
+
+.custom-modal .button.btn-success {
+  background-color: rgba(22, 166, 175, 1) !important;
+  color: #ffffff !important;
+}
+
+.custom-modal .button.btn-danger {
+  background-color: rgba(22, 166, 175, 1) !important;
+  color: #ffffff !important;
+}
+
+/* Стили для контейнера кнопок в модальных окнах без футера */
+.custom-modal .modal-body .d-flex.justify-content-end,
+.custom-modal .modal-body .d-flex.justify-content-center {
+  justify-content: center !important;
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 991px) {
+  .custom-modal {
+    max-width: 100% !important;
+    margin: 0;
+  }
+  
+  .custom-modal .modal-dialog {
+    margin: 0 !important;
+    max-width: 100% !important;
+    max-height: 90vh !important;
+    height: auto !important;
+  }
+  
+  .custom-modal .modal-content {
+    min-height: auto !important;
+    height: auto !important;
+    max-height: 90vh !important;
+    border-radius: 0;
+  }
+  
+  .custom-modal .modal-header,
+  .custom-modal .modal-body,
+  .custom-modal .modal-footer {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  
+  .custom-modal .modal-body {
+    max-height: calc(90vh - 57px) !important;
+    overflow-y: auto !important;
+  }
+  
+  .custom-modal.modal-footer .modal-body {
+    max-height: calc(90vh - 114px) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .custom-modal .modal-header {
+    height: 57px !important;
+    padding: 16px !important;
+  }
+  
+  .custom-modal .modal-title {
+    font-size: 18px !important;
+    line-height: 20px !important;
+  }
+  
+  .custom-modal .modal-body {
+    padding: 16px !important;
+    max-height: calc(85vh - 57px) !important;
+  }
+  
+  .custom-modal.modal-footer .modal-body {
+    max-height: calc(85vh - 114px) !important;
+  }
+  
+  .custom-modal .modal-footer {
+    padding: 16px !important;
+  }
+  
+  .custom-modal .modal-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .custom-modal .button {
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .custom-modal .modal-body .d-flex.justify-content-center {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .custom-modal .modal-body .d-flex.justify-content-center .button {
+    width: 100%;
+    max-width: 200px;
+  }
+}
 `}</style>
     </Container>
   );

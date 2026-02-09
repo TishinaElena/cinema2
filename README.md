@@ -29,8 +29,4 @@ React-приложение для онлайн-бронирования биле
 - **Стили:** CSS3, Bootstrap
 
 ## 📦 Установка и запуск
-
-1. **Клонирование репозитория:**
-```bash
-git clone <repository-url>
-cd cinema-booking-system2
+https://tishinaelena.github.io/cinema2/
