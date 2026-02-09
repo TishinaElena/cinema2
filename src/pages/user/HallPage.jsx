@@ -44,8 +44,6 @@ const HallPage = () => {
     }
   }, [location.search]);
 
-  
-
   // Основная функция загрузки конфигурации зала
   const loadActualHallConfig = useCallback(async (seanceId, date) => {
     try {
@@ -251,160 +249,153 @@ const HallPage = () => {
   };
 
   // Обработчик бронирования
-// Обработчик бронирования
-const handleBooking = () => {
-  if (selectedSeats.length === 0) {
-    alert('Выберите хотя бы одно место');
-    return;
-  }
-  
-  if (!movie || !hall || !seance) {
-    alert('Ошибка данных сеанса');
-    return;
-  }
-  
-  // Получаем актуальные размеры зала из конфигурации
-  const actualRows = actualHallConfig.length;
-  const actualCols = actualRows > 0 ? actualHallConfig[0].length : 0;
-  
-  if (actualRows === 0) {
-    alert('Не удалось загрузить конфигурацию зала');
-    return;
-  }
-  
-  // Проверяем, что выбранные места существуют в зале
-  const invalidSeats = [];
-  const selectedSeatsDetails = [];
-  
-  selectedSeats.forEach(seatKey => {
-    const [row, seat] = seatKey.split('-').map(Number);
-    
-    if (row > actualRows) {
-      invalidSeats.push(`Ряд ${row} не существует (в зале ${actualRows} рядов)`);
+  const handleBooking = () => {
+    if (selectedSeats.length === 0) {
+      alert('Выберите хотя бы одно место');
       return;
     }
     
-    if (seat > actualCols) {
-      invalidSeats.push(`Место ${seat} не существует в ряду ${row} (в ряду всего ${actualCols} мест)`);
+    if (!movie || !hall || !seance) {
+      alert('Ошибка данных сеанса');
       return;
     }
     
-    // Определяем тип места и цену
-    const rowIndex = row - 1;
-    const seatIndex = seat - 1;
-    const seatType = getSeatType(rowIndex, seatIndex);
-    const isVip = seatType === 'vip';
+    // Получаем актуальные размеры зала из конфигурации
+    const actualRows = actualHallConfig.length;
+    const actualCols = actualRows > 0 ? actualHallConfig[0].length : 0;
     
-    // Определяем VIP ряды из конфигурации (если еще не определили)
-    let vipRows = [];
-    actualHallConfig.forEach((rowConfig, index) => {
-      if (rowConfig.some(seat => seat === 'vip')) {
+    if (actualRows === 0) {
+      alert('Не удалось загрузить конфигурацию зала');
+      return;
+    }
+    
+    // Проверяем, что выбранные места существуют в зале
+    const invalidSeats = [];
+    const selectedSeatsDetails = [];
+    
+    selectedSeats.forEach(seatKey => {
+      const [row, seat] = seatKey.split('-').map(Number);
+      
+      if (row > actualRows) {
+        invalidSeats.push(`Ряд ${row} не существует (в зале ${actualRows} рядов)`);
+        return;
+      }
+      
+      if (seat > actualCols) {
+        invalidSeats.push(`Место ${seat} не существует в ряду ${row} (в ряду всего ${actualCols} мест)`);
+        return;
+      }
+      
+      // Определяем тип места и цену
+      const rowIndex = row - 1;
+      const seatIndex = seat - 1;
+      const seatType = getSeatType(rowIndex, seatIndex);
+      const isVip = seatType === 'vip';
+      
+      // Определяем VIP ряды из конфигурации (если еще не определили)
+      let vipRows = [];
+      actualHallConfig.forEach((rowConfig, index) => {
+        if (rowConfig.some(seat => seat === 'vip')) {
+          vipRows.push(index + 1);
+        }
+      });
+      
+      // Если место находится в VIP ряду (даже если не помечено как vip в конфигурации)
+      const isInVipRow = vipRows.includes(row);
+      
+      const standardPrice = seance?.priceStandard || hall?.hall_price_standart || 400;
+      const vipPrice = seance?.priceVip || hall?.hall_price_vip || 600;
+      const price = (isVip || isInVipRow) ? vipPrice : standardPrice;
+      
+      // Сохраняем детали места
+      selectedSeatsDetails.push({
+        row,
+        seat,
+        seatKey,
+        isVip: isVip || isInVipRow,
+        price,
+        seatType
+      });
+    });
+    
+    if (invalidSeats.length > 0) {
+      alert(`Ошибка выбора мест:\n${invalidSeats.join('\n')}`);
+      return;
+    }
+    
+    // Правильно преобразуем выбранные места в числовой формат для обратной совместимости
+    const numericSelectedSeats = selectedSeatsDetails.map(seatDetail => {
+      const { row, seat } = seatDetail;
+      // Формула: (номер ряда - 1) * количество мест в ряду + номер места
+      return (row - 1) * actualCols + seat;
+    });
+    
+    // Определяем VIP ряды из конфигурации
+    const vipRows = [];
+    actualHallConfig.forEach((row, index) => {
+      if (row.some(seat => seat === 'vip')) {
         vipRows.push(index + 1);
       }
     });
     
-    // Если место находится в VIP ряду (даже если не помечено как vip в конфигурации)
-    const isInVipRow = vipRows.includes(row);
-    
     const standardPrice = seance?.priceStandard || hall?.hall_price_standart || 400;
     const vipPrice = seance?.priceVip || hall?.hall_price_vip || 600;
-    const price = (isVip || isInVipRow) ? vipPrice : standardPrice;
     
-    // Сохраняем детали места
-    selectedSeatsDetails.push({
-      row,
-      seat,
-      seatKey,
-      isVip: isVip || isInVipRow,
-      price,
-      seatType
+    // Рассчитываем общую стоимость
+    const totalPrice = selectedSeatsDetails.reduce((total, seat) => total + seat.price, 0);
+    
+    // Форматируем дату для передачи
+    const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+    
+    console.log('HallPage: Sending to PaymentPage:', {
+      date: formattedDate,
+      rows: actualRows,
+      cols: actualCols,
+      vipRows: vipRows,
+      selectedSeatsCount: selectedSeats.length,
+      selectedSeatsDetails: selectedSeatsDetails,
+      numericSelectedSeats: numericSelectedSeats,
+      totalPrice: totalPrice
     });
-  });
-  
-  if (invalidSeats.length > 0) {
-    alert(`Ошибка выбора мест:\n${invalidSeats.join('\n')}`);
-    return;
-  }
-  
-  // Правильно преобразуем выбранные места в числовой формат для обратной совместимости
-  const numericSelectedSeats = selectedSeatsDetails.map(seatDetail => {
-    const { row, seat } = seatDetail;
-    // Формула: (номер ряда - 1) * количество мест в ряду + номер места
-    return (row - 1) * actualCols + seat;
-  });
-  
-  // Определяем VIP ряды из конфигурации
-  const vipRows = [];
-  actualHallConfig.forEach((row, index) => {
-    if (row.some(seat => seat === 'vip')) {
-      vipRows.push(index + 1);
-    }
-  });
-  
-  const standardPrice = seance?.priceStandard || hall?.hall_price_standart || 400;
-  const vipPrice = seance?.priceVip || hall?.hall_price_vip || 600;
-  
-  // Рассчитываем общую стоимость
-  const totalPrice = selectedSeatsDetails.reduce((total, seat) => total + seat.price, 0);
-  
-  // Форматируем дату для передачи
-  const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-  
-  console.log('HallPage: Sending to PaymentPage:', {
-    date: formattedDate,
-    rows: actualRows,
-    cols: actualCols,
-    vipRows: vipRows,
-    selectedSeatsCount: selectedSeats.length,
-    selectedSeatsDetails: selectedSeatsDetails,
-    numericSelectedSeats: numericSelectedSeats,
-    totalPrice: totalPrice
-  });
-  
-  const seanceTime = seance.seance_time || formatTime(seance.startTime);
-  
-  // Создаем seatsForPayment для API
-  const seatsForPayment = selectedSeatsDetails.map(seat => ({
-    row: seat.row, // 1-based
-    place: seat.seat, // 1-based
-    coast: seat.price
-  }));
-  
-  navigate('/payment', {
-    state: {
-      movie,
-      hall: {
-        ...hall,
-        name: hall.name || hall.hall_name,
-        rows: actualRows,
-        cols: actualCols,
-        vipRows: vipRows,
-        standardPrice: standardPrice,
-        vipPrice: vipPrice,
-        hall_config: actualHallConfig
-      },
-      seance: {
-        ...seance,
-        time: seanceTime,
-        id: seance.id
-      },
-       selectedSeats: numericSelectedSeats, // Для обратной совместимости [16]
-    selectedSeatsDetails: selectedSeatsDetails, // Основные данные [{row: 4, seat: 1, ...}]
-    seatsForPayment: seatsForPayment, // Для API
-    totalPrice,
-    selectedDate: formattedDate,
-    actualRows, // 8
-    actualCols, // 5 ← ЭТО ВАЖНО!
-    seanceId: seance.id
-    }
-  });
-};
-
-
-
-
-
-
+    
+    const seanceTime = seance.seance_time || formatTime(seance.startTime);
+    
+    // Создаем seatsForPayment для API
+    const seatsForPayment = selectedSeatsDetails.map(seat => ({
+      row: seat.row, // 1-based
+      place: seat.seat, // 1-based
+      coast: seat.price
+    }));
+    
+    navigate('/payment', {
+      state: {
+        movie,
+        hall: {
+          ...hall,
+          name: hall.name || hall.hall_name,
+          rows: actualRows,
+          cols: actualCols,
+          vipRows: vipRows,
+          standardPrice: standardPrice,
+          vipPrice: vipPrice,
+          hall_config: actualHallConfig
+        },
+        seance: {
+          ...seance,
+          time: seanceTime,
+          id: seance.id
+        },
+        selectedSeats: numericSelectedSeats, // Для обратной совместимости [16]
+        selectedSeatsDetails: selectedSeatsDetails, // Основные данные [{row: 4, seat: 1, ...}]
+        seatsForPayment: seatsForPayment, // Для API
+        totalPrice,
+        selectedDate: formattedDate,
+        actualRows, // 8
+        actualCols, // 5 ← ЭТО ВАЖНО!
+        seanceId: seance.id
+      }
+    });
+  };
 
   // Форматирование времени
   const formatTime = (timeValue) => {
@@ -516,10 +507,10 @@ const handleBooking = () => {
     <Container className="hall-page">
       <header className="user-page__header">
         <div 
-        className="user-page__logo" 
-        onClick={() => navigate('/')}
-        style={{ cursor: 'pointer' }}
-      >
+          className="user-page__logo" 
+          onClick={() => navigate('/')}
+          style={{ cursor: 'pointer' }}
+        >
           <span className="user-page__logo-bold">ИДЁМ</span>
           <span className="user-page__logo-thin">В</span>
           <span className="user-page__logo-bold">КИНО</span>
@@ -545,9 +536,25 @@ const handleBooking = () => {
 
         <div className="text-center mb-4">
           <div className="hall-page__container bg-dark p-3">
-            <div className="hall-page__screen mb-4 p-3 bg-gradient bg-dark text-white rounded shadow">
-              <i className="bi bi-display me-2"></i>
-              ЭКРАН
+            {/* ИЗМЕНЕНО: Используем правильный путь к изображению */}
+                <div className="hall-page__screen mb-4" style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: '100%'
+    }}>
+              <img 
+                src={`${process.env.PUBLIC_URL}/images/screen.png`}
+                alt="Экран" 
+                className="hall-page__screen-image"
+                style={{
+                  maxWidth: '350px',
+                  height: 'auto',
+                  display: 'block',
+                  margin: '0 auto',
+                
+                }}
+              />
             </div>
             
             {localLoading ? (
@@ -654,21 +661,6 @@ const handleBooking = () => {
 
         {!localLoading && actualRows > 0 && (
           <div className="text-center mt-4">
-            <div className="mb-3">
-              <p className="text-white">
-                Выбрано мест: <strong>{selectedSeats.length}</strong> | 
-                Общая стоимость: <strong>{selectedSeats.reduce((total, seatKey) => {
-                  const [rowStr] = seatKey.split('-');
-                  const row = parseInt(rowStr);
-                  const rowIndex = row - 1;
-                  const seatIndex = parseInt(seatKey.split('-')[1]) - 1;
-                  const seatType = getSeatType(rowIndex, seatIndex);
-                  const isVip = seatType === 'vip';
-                  return total + (isVip ? vipPrice : standardPrice);
-                }, 0)} ₽</strong>
-              </p>
-            </div>
-            
             <Button 
               variant="success" 
               size="lg"

@@ -94,7 +94,7 @@ const TicketPage = () => {
 
         // Генерируем QR-код
         const qrCodeDataUrl = await QRCode.toDataURL(qrText, {
-          width: 250,
+          width: 200,
           margin: 2,
           color: {
             dark: '#000000',
@@ -246,7 +246,7 @@ QR-код: ${qrCode}
   };
 
   return (
-    <Container className="py-4 ticket-page">
+    <Container className="ticket-page">
       <header className="user-page__header">
         <div 
         className="user-page__logo" 
@@ -271,7 +271,7 @@ QR-код: ${qrCode}
             <div className="ticket-details__item">
               <span className="ticket-details__label">
                 <i className="bi bi-film"></i>
-                На фильм: 
+                На фильм: &nbsp;
               </span>
               <span className="ticket-details__value fw-bold">{movieTitle}</span>
             </div>
@@ -279,7 +279,7 @@ QR-код: ${qrCode}
             <div className="ticket-details__item">
               <span className="ticket-details__label">
                 <i className="bi bi-calendar"></i>
-                Дата сеанса: 
+                Дата сеанса: &nbsp;
               </span>
               <span className="ticket-details__value fw-bold">{seanceDate}</span>
             </div>
@@ -287,7 +287,7 @@ QR-код: ${qrCode}
             <div className="ticket-details__item">
               <span className="ticket-details__label">
                 <i className="bi bi-geo-alt"></i>
-                Места: 
+                Места: &nbsp;
               </span>
               <span className="ticket-details__value">
                 {Array.isArray(selectedSeats) && selectedSeats.length > 0 ? (
@@ -314,7 +314,7 @@ QR-код: ${qrCode}
             <div className="ticket-details__item">
               <span className="ticket-details__label">
                 <i className="bi bi-building"></i>
-                В зале: 
+                В зале: &nbsp;
               </span>
               <span className="ticket-details__value fw-bold">{hallName}</span>
             </div>
@@ -322,7 +322,7 @@ QR-код: ${qrCode}
             <div className="ticket-details__item">
               <span className="ticket-details__label">
                 <i className="bi bi-clock"></i>
-                Начало сеанса: 
+                Начало сеанса: &nbsp;
               </span>
               <span className="ticket-details__value fw-bold">
                 {seanceTime} {seanceDate && `(${seanceDate})`}
@@ -332,10 +332,10 @@ QR-код: ${qrCode}
             <div className="ticket-details__item">
               <span className="ticket-details__label">
                 <i className="bi bi-currency-exchange"></i>
-                Стоимость: 
+                Стоимость: &nbsp;
               </span>
-              <span className="ticket-details__value fw-bold text-success">
-                {totalPrice} ₽
+              <span className="ticket-details__value fw-bold">
+                {totalPrice} рублей
               </span>
             </div>
           </div>

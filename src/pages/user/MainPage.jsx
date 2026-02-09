@@ -59,19 +59,19 @@ const MainPage = () => {
       const apiHalls = data.halls || [];
       const apiSeances = data.seances || [];
       
-// В MainPage.js убедитесь, что сеансы имеют правильное время
-const processedSeances = apiSeances.map(seance => {
-  const seanceTime = seance.seance_time || '12:00';
-  
-  return {
-    ...seance,
-    id: seance.id || seance.seance_id,
-    movieId: seance.filmId || seance.seance_filmid,
-    hallId: seance.hallId || seance.seance_hallid,
-    seance_time: seanceTime, // Только время, например "16:30"
-    date: null
-  };
-});
+      // В MainPage.js убедитесь, что сеансы имеют правильное время
+      const processedSeances = apiSeances.map(seance => {
+        const seanceTime = seance.seance_time || '12:00';
+        
+        return {
+          ...seance,
+          id: seance.id || seance.seance_id,
+          movieId: seance.filmId || seance.seance_filmid,
+          hallId: seance.hallId || seance.seance_hallid,
+          seance_time: seanceTime, // Только время, например "16:30"
+          date: null
+        };
+      });
       
       // Сортируем по времени
       processedSeances.sort((a, b) => {
@@ -116,29 +116,29 @@ const processedSeances = apiSeances.map(seance => {
   };
 
   // Проверяем, прошло ли время начала сеанса (только для сегодняшнего дня)
-const isSeanceTimePassed = (seance) => {
-  // Если выбран не сегодняшний день, сеансы всегда доступны
-  if (!isToday(selectedDate)) {
-    return false;
-  }
-  
-  try {
-    // Получаем время сеанса из строки формата "HH:mm"
-    const timeParts = seance.seance_time.split(':');
-    const seanceHours = parseInt(timeParts[0]);
-    const seanceMinutes = parseInt(timeParts[1]);
+  const isSeanceTimePassed = (seance) => {
+    // Если выбран не сегодняшний день, сеансы всегда доступны
+    if (!isToday(selectedDate)) {
+      return false;
+    }
     
-    // Создаем объект Date с сегодняшней датой и временем сеанса
-    const seanceDateTime = new Date();
-    seanceDateTime.setHours(seanceHours, seanceMinutes, 0, 0);
-    
-    // Сравниваем с текущим временем
-    return seanceDateTime < currentTime;
-  } catch (error) {
-    console.error('Ошибка проверки времени сеанса:', error);
-    return false;
-  }
-};
+    try {
+      // Получаем время сеанса из строки формата "HH:mm"
+      const timeParts = seance.seance_time.split(':');
+      const seanceHours = parseInt(timeParts[0]);
+      const seanceMinutes = parseInt(timeParts[1]);
+      
+      // Создаем объект Date с сегодняшней датой и временем сеанса
+      const seanceDateTime = new Date();
+      seanceDateTime.setHours(seanceHours, seanceMinutes, 0, 0);
+      
+      // Сравниваем с текущим временем
+      return seanceDateTime < currentTime;
+    } catch (error) {
+      console.error('Ошибка проверки времени сеанса:', error);
+      return false;
+    }
+  };
 
   // Получить массив дат для отображения
   const getDatesToShow = () => {
@@ -236,7 +236,8 @@ const isSeanceTimePassed = (seance) => {
   const showPrevButton = dateOffset > 0;
 
   return (
-    <Container className="main-page">
+    <div className="main-page">
+      {/* Хедер - всегда на всю ширину, но с внутренними отступами на планшетной/мобильной версии */}
       <header className="user-page__header">
         <Link to="/" className="user-page__logo" style={{ textDecoration: 'none' }}>
           <span className="user-page__logo-bold">ИДЁМ</span>
@@ -252,178 +253,181 @@ const isSeanceTimePassed = (seance) => {
         </button>
       </header>
 
-      <nav className="main-page__date-picker">
-        <div className="date-picker__container" ref={dateContainerRef}>
-          {/* Кнопка навигации назад (влево) - появляется после первого сдвига */}
-          {showPrevButton && (
+      {/* Основной контент в контейнере с ограничением ширины на десктопе */}
+      <Container className="main-page__container">
+        <nav className="main-page__date-picker">
+          <div className="date-picker__container" ref={dateContainerRef}>
+            {/* Кнопка навигации назад (влево) - появляется после первого сдвига */}
+            {showPrevButton && (
+              <button
+                className="date-picker__nav-btn date-picker__nav-btn--prev"
+                onClick={handlePrevDates}
+                aria-label="Предыдущие даты"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            )}
+            
+            <div className="date-picker__days">
+              {datesToShow.map((date, index) => {
+                const isActive = isSameDay(date, selectedDate);
+                const isTodayDate = isToday(date);
+                       
+                const dayAbbreviation = format(date, 'EEEEEE', { locale: ru });
+                const dayName = dayAbbreviation.charAt(0).toUpperCase() + dayAbbreviation.slice(1);
+                const dayOfMonth = format(date, 'd', { locale: ru });
+                
+                return (
+                  <button
+                    key={index}
+                    className={`date-picker__day-btn ${isActive ? 'date-picker__day-btn--active' : ''} ${isTodayDate ? 'date-picker__day-btn--today' : ''}`}
+                    onClick={() => handleDateSelect(date)}
+                  >
+                    <div className="date-picker__day-name">
+                      {isTodayDate ? 'Сегодня' : dayName}
+                    </div>
+                    <div className="date-picker__date">
+                      {dayOfMonth}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            
+            {/* Кнопка навигации вперед (вправо) - всегда видна */}
             <button
-              className="date-picker__nav-btn date-picker__nav-btn--prev"
-              onClick={handlePrevDates}
-              aria-label="Предыдущие даты"
+              className="date-picker__nav-btn date-picker__nav-btn--next"
+              onClick={handleNextDates}
+              aria-label="Следующие даты"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
-          )}
-          
-          <div className="date-picker__days">
-            {datesToShow.map((date, index) => {
-              const isActive = isSameDay(date, selectedDate);
-              const isTodayDate = isToday(date);
-                     
-              const dayAbbreviation = format(date, 'EEEEEE', { locale: ru });
-              const dayName = dayAbbreviation.charAt(0).toUpperCase() + dayAbbreviation.slice(1);
-              const dayOfMonth = format(date, 'd', { locale: ru });
-              
-              return (
-                <button
-                  key={index}
-                  className={`date-picker__day-btn ${isActive ? 'date-picker__day-btn--active' : ''} ${isTodayDate ? 'date-picker__day-btn--today' : ''}`}
-                  onClick={() => handleDateSelect(date)}
-                >
-                  <div className="date-picker__day-name">
-                    {isTodayDate ? 'Сегодня' : dayName}
-                  </div>
-                  <div className="date-picker__date">
-                    {dayOfMonth}
-                  </div>
-                </button>
-              );
-            })}
           </div>
-          
-          {/* Кнопка навигации вперед (вправо) - всегда видна */}
-          <button
-            className="date-picker__nav-btn date-picker__nav-btn--next"
-            onClick={handleNextDates}
-            aria-label="Следующие даты"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        </div>
-      </nav>
+        </nav>
 
-      <main className="main-page__content">
-        {filteredSeances.length === 0 ? (
-          <Alert variant="info" className="content_card main-page__no-sessions">
-            Сеансов нет.
-          </Alert>
-        ) : (
-          <div className="movie-schedule">
-            {movies.map(movie => {
-              const movieId = movie.id;
-              const movieSeances = filteredSeances.filter(seance => 
-                seance.movieId === movieId || seance.seance_filmid === movieId
-              );
+        <main className="main-page__content">
+          {filteredSeances.length === 0 ? (
+            <Alert variant="info" className="content_card main-page__no-sessions">
+              Сеансов нет.
+            </Alert>
+          ) : (
+            <div className="movie-schedule">
+              {movies.map(movie => {
+                const movieId = movie.id;
+                const movieSeances = filteredSeances.filter(seance => 
+                  seance.movieId === movieId || seance.seance_filmid === movieId
+                );
 
-              if (movieSeances.length === 0) return null;
+                if (movieSeances.length === 0) return null;
 
-              const sortedSeances = [...movieSeances].sort((a, b) => {
-                const timeA = a.seance_time || formatTime(a.startTime);
-                const timeB = b.seance_time || formatTime(b.startTime);
-                return timeA.localeCompare(timeB);
-              });
+                const sortedSeances = [...movieSeances].sort((a, b) => {
+                  const timeA = a.seance_time || formatTime(a.startTime);
+                  const timeB = b.seance_time || formatTime(b.startTime);
+                  return timeA.localeCompare(timeB);
+                });
 
-              const seancesByHall = {};
-              sortedSeances.forEach(seance => {
-                const hall = getHallById(seance.hallId || seance.seance_hallid);
-                if (hall) {
-                  const hallName = hall.name || hall.hall_name;
-                  if (!seancesByHall[hallName]) seancesByHall[hallName] = [];
-                  seancesByHall[hallName].push(seance);
-                }
-              });
+                const seancesByHall = {};
+                sortedSeances.forEach(seance => {
+                  const hall = getHallById(seance.hallId || seance.seance_hallid);
+                  if (hall) {
+                    const hallName = hall.name || hall.hall_name;
+                    if (!seancesByHall[hallName]) seancesByHall[hallName] = [];
+                    seancesByHall[hallName].push(seance);
+                  }
+                });
 
-              const movieTitle = movie.title || movie.film_name || 'Фильм';
-              const movieDescription = movie.description || movie.film_description || '';
-              const movieDuration = movie.duration || movie.film_duration || 0;
-              const movieGenre = movie.genre || '';
-              const movieCountry = movie.country || '';
+                const movieTitle = movie.title || movie.film_name || 'Фильм';
+                const movieDescription = movie.description || movie.film_description || '';
+                const movieDuration = movie.duration || movie.film_duration || 0;
+                const movieGenre = movie.genre || '';
+                const movieCountry = movie.country || '';
 
-              return (
-                <div key={movieId} className="content_card movie-card">
-                  <div className="movie-card__content">
-                    <div className="movie-card__info">
-                      <div className="movie-card__poster">
-                        <img
-                          src={getPosterUrl(movie)}
-                          alt={movieTitle}
-                          className="movie-card__poster-img"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(movieTitle)}`;
-                          }}
-                        />
-                      </div>
-                      
-                      <div className="movie-card__details">
-                        <h5 className="card__title">{movieTitle}</h5>
-                        
-                        <p className="movie-card__description">{movieDescription}</p>
-                        <div className="movie-card__meta">
-                          <span className="movie-card__duration">
-                            <i className="bi bi-clock me-1"></i>
-                            {formatDuration(movieDuration)}
-                          </span>
-                          {movieGenre && (
-                            <>
-                              <span className="movie-card__meta-divider">•</span>
-                              <span className="movie-card__genre">
-                                <i className="bi bi-film me-1"></i>
-                                {movieGenre}
-                              </span>
-                            </>
-                          )}
-                          {movieCountry && (
-                            <>
-                              <span className="movie-card__country">
-                                <i className="bi bi-globe me-1"></i>
-                                {movieCountry}
-                              </span>
-                            </>
-                          )}
+                return (
+                  <div key={movieId} className="content_card movie-card">
+                    <div className="movie-card__content">
+                      <div className="movie-card__info">
+                        <div className="movie-card__poster">
+                          <img
+                            src={getPosterUrl(movie)}
+                            alt={movieTitle}
+                            className="movie-card__poster-img"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://via.placeholder.com/300x450?text=${encodeURIComponent(movieTitle)}`;
+                            }}
+                          />
                         </div>
-                      </div>
-                    </div>
-                    
-                    <div className="movie-card__sessions">
-                      {Object.entries(seancesByHall).map(([hallName, hallSeances]) => (
-                        <div key={hallName} className="movie-sessions__hall">
-                          <h6 className="movie-sessions__hall-name">
-                            <i className="bi bi-door-open me-1"></i>
-                            {hallName}
-                          </h6>
-                          <div className="movie-sessions__list">
-                            {hallSeances.map(seance => {
-                              const time = seance.seance_time || formatTime(seance.startTime);
-                              const isDisabled = isSeanceTimePassed(seance);
-                              
-                              return (
-                                <button
-                                  key={seance.id}
-                                  className={`movie-sessions__time-btn ${isDisabled ? 'movie-sessions__time-btn--disabled' : ''}`}
-                                  onClick={() => handleTimeClick(seance.id, isDisabled)}
-                                  disabled={isDisabled}
-                                >
-                                  {time}
-                                </button>
-                              );
-                            })}
+                        
+                        <div className="movie-card__details">
+                          <h5 className="card__title">{movieTitle}</h5>
+                          
+                          <p className="movie-card__description">{movieDescription}</p>
+                          <div className="movie-card__meta">
+                            <span className="movie-card__duration">
+                              <i className="bi bi-clock me-1"></i>
+                              {formatDuration(movieDuration)}
+                            </span>
+                            {movieGenre && (
+                              <>
+                                <span className="movie-card__meta-divider">•</span>
+                                <span className="movie-card__genre">
+                                  <i className="bi bi-film me-1"></i>
+                                  {movieGenre}
+                                </span>
+                              </>
+                            )}
+                            {movieCountry && (
+                              <>
+                                <span className="movie-card__country">
+                                  <i className="bi bi-globe me-1"></i>
+                                  {movieCountry}
+                                </span>
+                              </>
+                            )}
                           </div>
                         </div>
-                      ))}
+                      </div>
+                      
+                      <div className="movie-card__sessions">
+                        {Object.entries(seancesByHall).map(([hallName, hallSeances]) => (
+                          <div key={hallName} className="movie-sessions__hall">
+                            <h6 className="movie-sessions__hall-name">
+                              <i className="bi bi-door-open me-1"></i>
+                              {hallName}
+                            </h6>
+                            <div className="movie-sessions__list">
+                              {hallSeances.map(seance => {
+                                const time = seance.seance_time || formatTime(seance.startTime);
+                                const isDisabled = isSeanceTimePassed(seance);
+                                
+                                return (
+                                  <button
+                                    key={seance.id}
+                                    className={`movie-sessions__time-btn ${isDisabled ? 'movie-sessions__time-btn--disabled' : ''}`}
+                                    onClick={() => handleTimeClick(seance.id, isDisabled)}
+                                    disabled={isDisabled}
+                                  >
+                                    {time}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </main>
-    </Container>
+                );
+              })}
+            </div>
+          )}
+        </main>
+      </Container>
+    </div>
   );
 };
 
