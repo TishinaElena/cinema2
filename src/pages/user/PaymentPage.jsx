@@ -363,9 +363,49 @@ const PaymentPage = () => {
       </header>
       
       <main className="payment-page__main">
+        
+    {/* Изображение-разделитель на всю ширину */}
+  <div 
+    className="payment-page__divider"
+    style={{
+      width: '100%',
+      height: '3px', // Высота вашего изображения
+      backgroundImage: `url(${process.env.PUBLIC_URL}/images/circle1.png)`,
+      backgroundRepeat: 'repeat-x',
+      backgroundPosition: 'center',
+      backgroundSize: '9px 3px', // Авто ширина, фикс высота
+      
+    }}
+  ></div>
+<div className="payment-card__title">ВЫ ВЫБРАЛИ БИЛЕТЫ:</div>
+  <div 
+    className="payment-page__divider"
+    style={{
+      width: '100%',
+      height: '3px', // Высота вашего изображения
+      backgroundImage: `url(${process.env.PUBLIC_URL}/images/circle2.png)`,
+      backgroundRepeat: 'repeat-x',
+      backgroundPosition: 'center',
+      backgroundSize: '9px 3px', // Авто ширина, фикс высота
+      
+    }}
+  ></div>
+  <div 
+    className="payment-page__divider"
+    style={{
+      width: '100%',
+      height: '3px', // Высота вашего изображения
+      backgroundImage: `url(${process.env.PUBLIC_URL}/images/circle1.png)`,
+      backgroundRepeat: 'repeat-x',
+      backgroundPosition: 'center',
+      backgroundSize: '9px 3px', // Авто ширина, фикс высота
+      
+    }}
+  ></div>
         <Card className="content_card">
           <Card.Body>
-            <h2 className="payment-card__title">ВЫ ВЫБРАЛИ БИЛЕТЫ:</h2>
+
+            
             
             <div className="payment-card__info">
               <div className="payment-card__info-item">
@@ -426,7 +466,7 @@ const PaymentPage = () => {
               <Button 
                 variant="primary" 
                 size="lg" 
-                className="button"
+                className="button button-get-code"
                 onClick={handleConfirmBooking}
                 disabled={loading || selectedSeats.length === 0}
               >
@@ -459,8 +499,13 @@ const PaymentPage = () => {
             </div>
 
             <div className="payment-card__notice">
-              После оплаты билет будет доступен в этом окне, а также придёт вам на почту. 
-              Покажите QR-код нашему контроллеру у входа в зал. Приятного просмотра!
+              <div className="mb-2">
+              После оплаты билет будет доступен в этом окне, а также придёт вам на почту. Покажите QR-код нашему контроллеру у входа в зал.
+              </div>
+              <div>
+              Приятного просмотра!
+              </div> 
+               
             </div>  
           </Card.Body>
         </Card>

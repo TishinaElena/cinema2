@@ -194,31 +194,32 @@ const HallPage = () => {
   }, [seanceId, selectedDate, seance, loadActualHallConfig]);
 
   // Проверка типа места
-  const getSeatType = (rowIndex, seatIndex) => {
-    if (actualHallConfig.length > 0 && 
-        rowIndex >= 0 && rowIndex < actualHallConfig.length &&
-        actualHallConfig[rowIndex] && 
-        seatIndex >= 0 && seatIndex < actualHallConfig[rowIndex].length) {
-      return actualHallConfig[rowIndex][seatIndex];
-    }
-    
-    return 'standart';
-  };
+const getSeatType = (rowIndex, seatIndex) => {
+  if (actualHallConfig.length > 0 && 
+      rowIndex >= 0 && rowIndex < actualHallConfig.length &&
+      actualHallConfig[rowIndex] && 
+      seatIndex >= 0 && seatIndex < actualHallConfig[rowIndex].length) {
+    return actualHallConfig[rowIndex][seatIndex];
+  }
+  
+  return 'standart'; // стандартное место по умолчанию
+};
 
-  // Проверка доступности места
-  const isSeatAvailable = (rowIndex, seatIndex) => {
-    // Проверяем, существует ли такое место в зале
-    if (rowIndex < 0 || seatIndex < 0 || 
-        rowIndex >= actualHallConfig.length || 
-        !actualHallConfig[rowIndex] || 
-        seatIndex >= actualHallConfig[rowIndex].length) {
-      console.warn(`Seat at row ${rowIndex + 1}, seat ${seatIndex + 1} doesn't exist in hall`);
-      return false;
-    }
-    
-    const seatType = getSeatType(rowIndex, seatIndex);
-    return seatType !== 'disabled' && seatType !== 'taken';
-  };
+// Проверка доступности места
+const isSeatAvailable = (rowIndex, seatIndex) => {
+  // Проверяем, существует ли такое место в зале
+  if (rowIndex < 0 || seatIndex < 0 || 
+      rowIndex >= actualHallConfig.length || 
+      !actualHallConfig[rowIndex] || 
+      seatIndex >= actualHallConfig[rowIndex].length) {
+    return false;
+  }
+  
+  const seatType = getSeatType(rowIndex, seatIndex);
+  
+  // ТОЛЬКО 'taken' - занято, 'disabled' просто не показываем
+  return seatType !== 'taken';
+};
 
   // Обработчик клика по месту
   const handleSeatClick = (rowIndex, seatIndex, rowNumber, seatNumber) => {
@@ -548,6 +549,7 @@ const HallPage = () => {
                 alt="Экран" 
                 className="hall-page__screen-image"
                 style={{
+                  width: '100%',
                   maxWidth: '350px',
                   height: 'auto',
                   display: 'block',
@@ -583,39 +585,44 @@ const HallPage = () => {
                     return (
                       <div key={rowIndex} className="hall-page__row d-flex justify-content-center mb-1">
                         <div className="d-flex flex-wrap justify-content-center hall-page__seats-container">
-                          {Array.from({ length: actualCols }, (_, colIndex) => {
-                            const seatNumber = colIndex + 1;
-                            const seatKey = `${rowNumber}-${seatNumber}`;
-                            const isSelected = selectedSeats.includes(seatKey);
-                            
-                            const seatType = getSeatType(rowIndex, colIndex);
-                            const isAvailable = isSeatAvailable(rowIndex, colIndex);
-                            
-                            let seatClass = 'hall-page__seat hall-page__seat--standard';
-                            if (!isAvailable) {
-                              seatClass = 'hall-page__seat hall-page__seat--occupied';
-                            } else if (isSelected) {
-                              seatClass = 'hall-page__seat hall-page__seat--selected';
-                            } else if (seatType === 'vip') {
-                              seatClass = 'hall-page__seat hall-page__seat--vip';
-                            }
-                            
-                            return (
-                              <button
-                                key={colIndex}
-                                className={`${seatClass} mx-1 mb-1 d-flex align-items-center justify-content-center`}
-                                disabled={!isAvailable}
-                                onClick={() => handleSeatClick(rowIndex, colIndex, rowNumber, seatNumber)}
-                                title={`Ряд ${rowNumber}, Место ${seatNumber} - ${
-                                  !isAvailable 
-                                    ? (seatType === 'taken' ? 'Занято' : 'Заблокировано')
-                                    : (seatType === 'vip' ? `VIP (${vipPrice} ₽)` : `Стандарт (${standardPrice} ₽)`)
-                                }`}
-                              >
-                              </button>
-                            );
-                          })}
-                        </div>
+  {Array.from({ length: actualCols }, (_, colIndex) => {
+    const seatNumber = colIndex + 1;
+    const seatKey = `${rowNumber}-${seatNumber}`;
+    const isSelected = selectedSeats.includes(seatKey);
+    
+    const seatType = getSeatType(rowIndex, colIndex);
+    const isAvailable = isSeatAvailable(rowIndex, colIndex);
+    
+    // ЕСЛИ МЕСТО ЗАБЛОКИРОВАНО (disabled) - НЕ РЕНДЕРИМ ВООБЩЕ
+    if (seatType === 'disabled') {
+      return null; // Не показываем заблокированные места
+    }
+    
+    let seatClass = 'hall-page__seat hall-page__seat--standard';
+    if (seatType === 'taken') {
+      seatClass = 'hall-page__seat hall-page__seat--occupied';
+    } else if (isSelected) {
+      seatClass = 'hall-page__seat hall-page__seat--selected';
+    } else if (seatType === 'vip') {
+      seatClass = 'hall-page__seat hall-page__seat--vip';
+    }
+    
+    return (
+      <button
+        key={colIndex}
+        className={`${seatClass} mx-1 mb-1 d-flex align-items-center justify-content-center`}
+        disabled={!isAvailable}
+        onClick={() => handleSeatClick(rowIndex, colIndex, rowNumber, seatNumber)}
+        title={`Ряд ${rowNumber}, Место ${seatNumber} - ${
+          !isAvailable 
+            ? (seatType === 'taken' ? 'Занято' : '')
+            : (seatType === 'vip' ? `VIP (${vipPrice} ₽)` : `Стандарт (${standardPrice} ₽)`)
+        }`}
+      >
+      </button>
+    );
+  })}
+</div>
                       </div>
                     );
                   })}
@@ -625,28 +632,28 @@ const HallPage = () => {
                   <div className="d-flex flex-column align-items-center">
                     <div className="hall-page__legend-container">
                       <div className="hall-page__legend-row d-flex mb-3">
-                        <div className="hall-page__legend-item d-flex align-items-center">
+                        <div className="hall-page__legend-item d-flex align-items-center first-col">
                           <span className="hall-page__legend-icon hall-page__legend-icon--standard me-2"></span>
                           <small className="text-nowrap text-white">
                             Свободно ({standardPrice} руб)
                           </small>
                         </div>
                         
-                        <div className="hall-page__legend-item d-flex align-items-center justify-content-start">
+                        <div className="hall-page__legend-item d-flex align-items-center second-col">
                           <span className="hall-page__legend-icon hall-page__legend-icon--occupied me-2"></span>
                           <small className="text-nowrap text-white">Занято</small>
                         </div>
                       </div>
                       
                       <div className="hall-page__legend-row d-flex">
-                        <div className="hall-page__legend-item d-flex align-items-center">
+                        <div className="hall-page__legend-item d-flex align-items-center first-col">
                           <span className="hall-page__legend-icon hall-page__legend-icon--vip me-2"></span>
                           <small className="text-nowrap text-white">
                             Свободно VIP ({vipPrice} руб)
                           </small>
                         </div>
                         
-                        <div className="hall-page__legend-item d-flex align-items-center justify-content-start">
+                        <div className="hall-page__legend-item d-flex align-items-center second-col">
                           <span className="hall-page__legend-icon hall-page__legend-icon--selected me-2"></span>
                           <small className="text-nowrap text-white">Выбрано</small>
                         </div>

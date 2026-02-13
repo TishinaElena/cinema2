@@ -270,31 +270,40 @@ const MainPage = () => {
               </button>
             )}
             
-            <div className="date-picker__days">
-              {datesToShow.map((date, index) => {
-                const isActive = isSameDay(date, selectedDate);
-                const isTodayDate = isToday(date);
-                       
-                const dayAbbreviation = format(date, 'EEEEEE', { locale: ru });
-                const dayName = dayAbbreviation.charAt(0).toUpperCase() + dayAbbreviation.slice(1);
-                const dayOfMonth = format(date, 'd', { locale: ru });
-                
-                return (
-                  <button
-                    key={index}
-                    className={`date-picker__day-btn ${isActive ? 'date-picker__day-btn--active' : ''} ${isTodayDate ? 'date-picker__day-btn--today' : ''}`}
-                    onClick={() => handleDateSelect(date)}
-                  >
-                    <div className="date-picker__day-name">
-                      {isTodayDate ? 'Сегодня' : dayName}
-                    </div>
-                    <div className="date-picker__date">
-                      {dayOfMonth}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+<div className="date-picker__days">
+  {datesToShow.map((date, index) => {
+    const isActive = isSameDay(date, selectedDate);
+    const isTodayDate = isToday(date);
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6; // 0 - воскресенье, 6 - суббота
+    
+    const dayAbbreviation = format(date, 'EEEEEE', { locale: ru });
+    const dayName = dayAbbreviation.charAt(0).toUpperCase() + dayAbbreviation.slice(1);
+    const dayOfMonth = format(date, 'd', { locale: ru });
+    
+    // Формируем классы для кнопки даты
+    const dateButtonClasses = [
+      'date-picker__day-btn',
+      isActive ? 'date-picker__day-btn--active' : '',
+      isTodayDate ? 'date-picker__day-btn--today' : '',
+      isWeekend ? 'date-picker__day-btn--weekend' : ''
+    ].filter(Boolean).join(' ');
+    
+    return (
+      <button
+        key={index}
+        className={dateButtonClasses}
+        onClick={() => handleDateSelect(date)}
+      >
+        <span className="date-picker__day-name">
+          {isTodayDate ? 'Сегодня' : dayName + ','}
+        </span>
+        <span className="date-picker__date-number">
+          {isTodayDate ? dayName + ', ' + dayOfMonth : dayOfMonth}
+        </span>
+      </button>
+    );
+  })}
+</div>
             
             {/* Кнопка навигации вперед (вправо) - всегда видна */}
             <button
@@ -362,6 +371,7 @@ const MainPage = () => {
                           />
                         </div>
                         
+  <div className="movie-card__separator"></div>
                         <div className="movie-card__details">
                           <h5 className="card__title">{movieTitle}</h5>
                           

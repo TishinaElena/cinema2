@@ -169,8 +169,8 @@ const AdminLoginPage = () => {
         
         <Row className="justify-content-center">
           
-            <Card className="shadow admin-login-card">
-              <Card.Body className="justify-content-center">
+            <Card className="shadow admin-login-card ">
+              <Card.Body className="justify-content-center ">
             <div className="auth-header">
               <h2 className="auth-title">
                 <i className="bi bi-shield-lock me-2"></i>
@@ -184,12 +184,20 @@ const AdminLoginPage = () => {
                   </Alert>
                 )}
 
-                <Form className='p-2' onSubmit={handleSubmit}>
-                  <Form.Group className=" input-line pb-2">
-                    <Form.Label>
-                      <i className="bi bi-person me-2 "></i>
-                      E-mail
-                    </Form.Label>
+                <Form className='auth-form' onSubmit={handleSubmit}>
+                  <Form.Group className=" input-line ">
+               
+                    <div style={{
+                  fontFamily: 'Roboto',
+                  fontWeight: 400,
+                  fontSize: '12px',
+                  lineHeight: '14px',
+                  letterSpacing: '0%',
+                  marginBottom: '4px',
+                  color: 'rgba(132, 132, 132, 1)'
+                }}>
+                  E-mail
+                </div>
                     <Form.Control
                       type="text"
                       name="login"
@@ -202,10 +210,17 @@ const AdminLoginPage = () => {
                   </Form.Group>
 
                   <Form.Group className="input-line">
-                    <Form.Label>
-                      <i className="bi bi-key me-2"></i>
-                      Пароль
-                    </Form.Label>
+                      <div style={{
+                  fontFamily: 'Roboto',
+                  fontWeight: 400,
+                  fontSize: '12px',
+                  lineHeight: '14px',
+                  letterSpacing: '0%',
+                  marginBottom: '4px',
+                  color: 'rgba(132, 132, 132, 1)'
+                }}>
+                  Пароль
+                </div>
                     <Form.Control
                       type="password"
                       name="password"
@@ -217,11 +232,11 @@ const AdminLoginPage = () => {
                     />
                   </Form.Group>
 
-<div className="d-grid gap-2" style={{ 
-  width: '189px', 
-  margin: '20px auto 0 auto',
-  display: 'flex',
-  justifyContent: 'center'
+<div style={{ 
+  display: 'flex', 
+  justifyContent: 'center', 
+  marginTop: '20px', 
+  marginBottom: '30px' /* ← Добавляем нижний отступ 30px */
 }}>
   <Button 
     className="button"

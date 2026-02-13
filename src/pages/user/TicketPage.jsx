@@ -259,37 +259,64 @@ QR-код: ${qrCode}
         </div>
       </header>
 
+    {/* Изображение-разделитель на всю ширину */}
+  <div 
+    className="payment-page__divider"
+    style={{
+      width: '100%',
+      height: '3px', // Высота вашего изображения
+      backgroundImage: `url(${process.env.PUBLIC_URL}/images/circle1.png)`,
+      backgroundRepeat: 'repeat-x',
+      backgroundPosition: 'center',
+      backgroundSize: '9px 3px', // Авто ширина, фикс высота
+      
+    }}
+  ></div>
+<div className="payment-card__title">ЭЛЕКТРОННЫЙ БИЛЕТ</div>
+  <div 
+    className="payment-page__divider"
+    style={{
+      width: '100%',
+      height: '3px', // Высота вашего изображения
+      backgroundImage: `url(${process.env.PUBLIC_URL}/images/circle2.png)`,
+      backgroundRepeat: 'repeat-x',
+      backgroundPosition: 'center',
+      backgroundSize: '9px 3px', // Авто ширина, фикс высота
+      
+    }}
+  ></div>
+  <div 
+    className="payment-page__divider"
+    style={{
+      width: '100%',
+      height: '3px', // Высота вашего изображения
+      backgroundImage: `url(${process.env.PUBLIC_URL}/images/circle1.png)`,
+      backgroundRepeat: 'repeat-x',
+      backgroundPosition: 'center',
+      backgroundSize: '9px 3px', // Авто ширина, фикс высота
+      
+    }}
+  ></div>
       <Card className="content_card">
         <Card.Body className="ticket-card__body">
-          {/* Ticket Header */}
-          <div className="ticket-header">
-            <h1 className="ticket-header__title">Электронный билет</h1>
-          </div>
+
 
           {/* Ticket Details */}
           <div className="ticket-details">
             <div className="ticket-details__item">
               <span className="ticket-details__label">
                 <i className="bi bi-film"></i>
-                На фильм: &nbsp;
+                На фильм:  <span className="ticket-details__value fw-bold">{movieTitle}</span>
               </span>
-              <span className="ticket-details__value fw-bold">{movieTitle}</span>
+             
             </div>
 
-            <div className="ticket-details__item">
-              <span className="ticket-details__label">
-                <i className="bi bi-calendar"></i>
-                Дата сеанса: &nbsp;
-              </span>
-              <span className="ticket-details__value fw-bold">{seanceDate}</span>
-            </div>
+
 
             <div className="ticket-details__item">
               <span className="ticket-details__label">
                 <i className="bi bi-geo-alt"></i>
-                Места: &nbsp;
-              </span>
-              <span className="ticket-details__value">
+                Места: <span className="ticket-details__value">
                 {Array.isArray(selectedSeats) && selectedSeats.length > 0 ? (
                   selectedSeats.map((seat, index) => (
                     <span key={index} bg="primary" className="me-1 mb-1">
@@ -309,73 +336,69 @@ QR-код: ${qrCode}
                   )
                 )}
               </span>
+              </span>
+              
             </div>
 
             <div className="ticket-details__item">
               <span className="ticket-details__label">
                 <i className="bi bi-building"></i>
-                В зале: &nbsp;
+                В зале:  <span className="ticket-details__value fw-bold">{hallName}</span>
               </span>
-              <span className="ticket-details__value fw-bold">{hallName}</span>
+              
             </div>
 
             <div className="ticket-details__item">
               <span className="ticket-details__label">
                 <i className="bi bi-clock"></i>
-                Начало сеанса: &nbsp;
+                Начало сеанса:   <span className="ticket-details__value fw-bold">
+                {seanceTime} 
               </span>
-              <span className="ticket-details__value fw-bold">
-                {seanceTime} {seanceDate && `(${seanceDate})`}
               </span>
+             
             </div>
 
             <div className="ticket-details__item">
               <span className="ticket-details__label">
                 <i className="bi bi-currency-exchange"></i>
-                Стоимость: &nbsp;
-              </span>
-              <span className="ticket-details__value fw-bold">
+                Стоимость:  <span className="ticket-details__value fw-bold">
                 {totalPrice} рублей
               </span>
+              </span>
+              
             </div>
           </div>
 
           {/* QR Code Section */}
-          <div className="text-center my-4">
-            <Card className="ticket-qr">
-              <Card.Body className="ticket-qr__body">
+          <div className="text-center ticket-qr">
+            
                 {qrCodeUrl ? ( // Используем сгенерированный QR-код
                   <>
                     <img 
                       src={qrCodeUrl} 
                       alt={`QR-код билета ${bookingId}`}
                       className="img-fluid ticket-qr__code"
-                      style={{ maxWidth: '250px' }}
+                      style={{ width: '200px' }}
                     />
-                    <p className="mt-2 text-muted small">Покажите QR-код контроллеру</p>
+                    
                   </>
                 ) : (
-                  <div className="text-center py-4">
+                  <div className="text-center ">
                     <Spinner animation="border" variant="primary" size="sm" />
-                    <p className="mt-2">Генерация QR-кода...</p>
+                    <p className="">Генерация QR-кода...</p>
                   </div>
                 )}
-              </Card.Body>
-            </Card>
+              
           </div>
 
           {/* User Instructions */}
           <div className="ticket-instructions">
             <div className="mb-2">
-              <i className="bi bi-check-circle-fill me-2 text-success"></i>
-              Билет успешно оформлен и отправлен на вашу почту
-            </div>
-            <div className="mb-2">
-              <i className="bi bi-qr-code me-2 text-primary"></i>
-              Покажите QR-код контроллеру для входа в зал
+              <i className=""></i>
+              Покажите QR-код нашему контроллеру для подтверждения бронирования.
             </div>
             <div>
-              <i className="bi bi-emoji-smile me-2 text-warning"></i>
+              <i className=""></i>
               Приятного просмотра!
             </div>
           </div>

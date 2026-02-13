@@ -125,7 +125,9 @@ label, small, strong, em,
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 0px;
+  padding: 14px 14px;
+  flex-wrap: nowrap !important; /* Запрещаем перенос */
+  width: 100%;
 }
 
 .user-page__logo {
@@ -136,6 +138,8 @@ label, small, strong, em,
   display: flex;
   align-items: center;
   color: white;
+  white-space: nowrap; /* Текст логотипа не переносится */
+  flex-shrink: 0; /* Запрещаем сжатие */
 }
 
 .user-page__logo-bold {
@@ -148,21 +152,24 @@ label, small, strong, em,
 
 @media (min-width: 992px) {
   .user-page__header {
-    padding: 14px 0;
+    padding: 14px 14px;
     max-width: 990px;
     margin: 0 auto;
+    flex-wrap: nowrap !important; /* Запрещаем перенос */
   }
 }
 
 @media (max-width: 991px) {
   .user-page__header {
-    padding: 14px 15px !important;
+     padding: 14px 15px !important;
+    flex-wrap: nowrap !important; /* Запрещаем перенос */
   }
 }
 
 @media (max-width: 320px) {
   .user-page__header {
     padding: 12px 10px !important;
+    flex-wrap: nowrap !important; /* Запрещаем перенос */
   }
   .sign-in-button {
     padding: 8px 12px !important;
@@ -195,6 +202,9 @@ label, small, strong, em,
 
 .sign-in-button {
   padding: 12px;
+  white-space: nowrap; /* Текст кнопки не переносится */
+  flex-shrink: 0; /* Запрещаем сжатие */
+  margin-left: auto; /* Прижимаем к правому краю */
 }
 
 /* ===== ДАТАПИКЕР ===== */
@@ -204,8 +214,9 @@ label, small, strong, em,
   justify-content: center;
   margin-bottom: 30px;
   position: relative;
-  gap: 4px;
+  gap: 1px;
   width: 100%;
+  overflow: visible; /* Добавьте */
 }
 
 .date-picker__nav-btn {
@@ -230,7 +241,7 @@ label, small, strong, em,
 }
 
 .date-picker__nav-btn:hover {
-  border-color: #007bff;
+  
   background-color: #f8f9fa;
 }
 
@@ -261,16 +272,18 @@ label, small, strong, em,
   margin-left: 1px;
 }
 
-.date-picker__nav-btn:hover .date-picker__nav-arrow {
-  border-color: #007bff;
-}
+
 
 .date-picker__days {
   display: flex;
   width: 100%;
   overflow-x: auto;
+  overflow-y: visible;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  align-items: center;
+   padding: 2px 0; /* Небольшой отступ */
+  
 }
 
 .date-picker__days::-webkit-scrollbar {
@@ -304,42 +317,81 @@ label, small, strong, em,
 }
 
 .date-picker__day-btn--active {
-  background-color: #ffffff;
-  color: #000000;
-  border-color: #F1EBE6;
-  height: 52px;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+ 
+  height: 54px;
   margin-top: -2px;
+  border-radius: 2px !important;
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.12);
   flex: 1.2 !important;
   min-width: 100px !important;
   z-index: 2;
   position: relative;
+
 }
 
+/* У активного дня весь текст жирный */
 .date-picker__day-btn--active .date-picker__day-name,
-.date-picker__day-btn--active .date-picker__date {
+.date-picker__day-btn--active .date-picker__date,
+.date-picker__day-btn--active .date-picker__date-number {
   font-weight: 700;
+  font-size: 15px;
+  line-height: 14px;
 }
+
+/* Для выходных дней - только цвет, вес не меняем */
+.date-picker__day-btn--weekend .date-picker__day-name,
+.date-picker__day-btn--weekend .date-picker__date,
+.date-picker__day-btn--weekend .date-picker__date-number {
+  color: #ff4444; /* Ваш красный цвет */
+  
+}
+
+/* Активный выходной день - жирный белый текст */
+.date-picker__day-btn--weekend.date-picker__day-btn--active .date-picker__day-name,
+.date-picker__day-btn--weekend.date-picker__day-btn--active .date-picker__date,
+.date-picker__day-btn--weekend.date-picker__day-btn--active .date-picker__date-number {
+  font-weight: 700 !important;
+  
+}
+
+/* Сегодня (не активный) - только цвет, вес 400 */
+.date-picker__day-btn--today:not(.date-picker__day-btn--active) .date-picker__day-name,
+.date-picker__day-btn--today:not(.date-picker__day-btn--active) .date-picker__date,
+.date-picker__day-btn--today:not(.date-picker__day-btn--active) .date-picker__date-number {
+  font-weight: 400;
+}
+
+
 
 .date-picker__day-btn--today {
   border-color: rgba(241, 235, 230, 0.95);
 }
 
-.date-picker__day-btn--today .date-picker__day-name {
-  font-weight: 600;
-}
+
 
 .date-picker__day-name {
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-bottom: 2px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 14px;
   text-transform: none;
 }
 
 .date-picker__date {
-  font-size: 1rem;
+  font-size: 12px;
   font-weight: normal;
 }
+
+/* Стили для выходных дней */
+.date-picker__day-btn--weekend .date-picker__day-name {
+  color: #ff4444; /* Красный цвет */
+}
+
+.date-picker__day-btn--weekend .date-picker__date {
+  color: #ff4444; /* Красный цвет для числа */
+}
+
 
 @media (min-width: 992px) {
   .date-picker__container {
@@ -353,44 +405,32 @@ label, small, strong, em,
   .main-page__date-picker {
     padding-left: 0px;
     padding-right: 0px;
+    overflow: visible;
   }
 }
 
 @media (max-width: 768px) {
   .date-picker__container {
-    gap: 2px;
+    gap: 1px;
   }
   .date-picker__nav-btn {
     min-width: 36px;
     max-width: 40px;
-    height: 44px;
+   
     padding: 8px 0;
   }
   .date-picker__nav-arrow {
     width: 8px;
     height: 8px;
   }
-  .date-picker__day-btn {
-    padding: 8px 12px;
-    height: 44px;
-    font-size: 11px;
-  }
-  .date-picker__day-btn--active {
-    height: 46px;
-  }
-  .date-picker__day-name {
-    font-size: 0.75rem;
-  }
-  .date-picker__date {
-    font-size: 0.9rem;
-  }
+
 }
 
 @media (max-width: 576px) {
   .date-picker__nav-btn {
     min-width: 32px;
     max-width: 36px;
-    height: 40px;
+    
     padding: 6px 0;
   }
   .date-picker__nav-arrow {
@@ -398,47 +438,11 @@ label, small, strong, em,
     height: 6px;
     border-width: 1.5px;
   }
-  .date-picker__day-btn {
-    padding: 6px 8px;
-    height: 40px;
-    font-size: 10px;
-  }
-  .date-picker__day-btn--active {
-    height: 42px;
-  }
-  .date-picker__day-name {
-    font-size: 0.7rem;
-    margin-bottom: 1px;
-  }
-  .date-picker__date {
-    font-size: 0.85rem;
-  }
+
+
 }
 
-@media (max-width: 320px) {
-  .main-page__date-picker {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-  .date-picker__nav-btn {
-    min-width: 28px !important;
-    max-width: 32px !important;
-    height: 36px !important;
-    padding: 4px 0 !important;
-  }
-  .date-picker__day-btn {
-    padding: 4px 6px !important;
-    height: 36px !important;
-    font-size: 9px !important;
-    min-width: 38px !important;
-  }
-  .date-picker__day-name {
-    font-size: 0.65rem !important;
-  }
-  .date-picker__date {
-    font-size: 0.8rem !important;
-  }
-}
+
 
 /* ===== КАРТОЧКИ ФИЛЬМОВ ===== */
 .movie-schedule {
@@ -452,6 +456,17 @@ label, small, strong, em,
   flex-direction: column;
 }
 
+/* Разделитель между постером и деталями */
+.movie-card__separator {
+  width: 6px;
+  height: 14px;
+  background-color: rgba(57, 57, 57, 1);
+  margin-right: 15px; /* Отступ от постера + отступ до деталей */
+  margin-left: 1px;   /* Отступ 1px от постера */
+  align-self: flex-start; /* Выравнивание по верхнему краю постера */
+  flex-shrink: 0; /* Запрещаем сжатие */
+}
+
 .movie-card__info {
   display: flex;
   padding: 15px 15px 0px 15px;
@@ -461,7 +476,7 @@ label, small, strong, em,
 
 .movie-card__poster {
   flex-shrink: 0;
-  margin-right: 15px;
+  margin-right: 0px;
   display: flex;
   align-items: flex-start;
   width: 125px;
@@ -579,10 +594,7 @@ label, small, strong, em,
     padding-left: 0px !important;
     padding-right: 0px !important;
   }
-  .movie-card__description {
-    font-size: 13px;
-    line-height: 1.4;
-  }
+
 }
 
 @media (max-width: 768px) {
@@ -591,7 +603,7 @@ label, small, strong, em,
     padding: 15px !important;
   }
   .movie-card__poster {
-    margin-right: 15px !important;
+    
     margin-bottom: 0 !important;
     align-self: flex-start !important;
   }
@@ -631,11 +643,15 @@ label, small, strong, em,
     gap: 0.25rem;
   }
   .date-picker__days {
-    flex-wrap: wrap;
+    flex-wrap: nowrap !important; /* Измените с wrap на nowrap */
+    overflow-x: auto; /* Добавьте горизонтальный скролл */
+    -webkit-overflow-scrolling: touch; /* Плавный скролл на iOS */
   }
   .date-picker__day-btn {
-    flex: 0 0 calc(100% / 4 - 2px);
-    margin-bottom: 4px;
+    flex: 0 0 auto !important; /* Измените с calc(100% / 4 - 2px) на auto */
+    width: auto; /* Автоматическая ширина */
+    min-width: 70px; /* Минимальная ширина для мобильных */
+    margin-bottom: 0; /* Уберите нижний отступ */
   }
 }
 
@@ -647,17 +663,12 @@ label, small, strong, em,
   .movie-card__info {
     padding: 10px !important;
   }
-  .movie-card__poster {
-    margin-right: 10px !important;
-  }
+  
   .card__title {
     font-size: 14px !important;
     line-height: 16px !important;
   }
-  .movie-card__description {
-    font-size: 11px !important;
-    line-height: 13px !important;
-  }
+
   .movie-card__meta {
     font-size: 11px !important;
     gap: 3px;
@@ -801,13 +812,17 @@ label, small, strong, em,
 }
 
 .hall-page__legend {
-  margin-top: 2rem;
+  margin-top: 30px;
+  width: 100%;
+  display: flex;
+  justify-content: center; /* Центрирование по горизонтали */
 }
 
 .hall-page__legend-container {
-  width: 400px;
+  width: 350px;
   max-width: 100%;
   min-width: 300px;
+  
 }
 
 .hall-page__legend-row {
@@ -827,6 +842,14 @@ label, small, strong, em,
   width: 48%;
 }
 
+.first-col {
+  width: 70%;
+}
+
+.second-col {
+  width: 30%;
+}
+
 .hall-page__legend-icon {
   width: 20px;
   height: 20px;
@@ -836,7 +859,9 @@ label, small, strong, em,
   justify-content: center;
   flex-shrink: 0;
 }
-
+.hall-page__booking-btn{
+  width: 232px !important;
+}
 
 /* ВРЕМЕННОЕ РЕШЕНИЕ */
 .hall-page__seats-container {
@@ -895,9 +920,15 @@ label, small, strong, em,
   .hall-page__legend-container {
     width: 400px;
   }
-  .hall-page__legend-item {
-    width: 48%;
-  }
+
+  .first-col {
+  width: 70%;
+}
+
+.second-col {
+  width: 30%;
+}
+
 }
 
 @media (max-width: 576px) {
@@ -907,7 +938,7 @@ label, small, strong, em,
     margin: 0 1px 3px !important;
   }
   .hall-page__legend-container {
-    width: 400px;
+    width: 100%;
   }
   .hall-page__legend-row {
     flex-direction: row !important;
@@ -915,12 +946,12 @@ label, small, strong, em,
     margin-bottom: 1rem;
   }
   .hall-page__legend-item {
-    width: 48% !important;
+    
     margin-bottom: 0.75rem;
     gap: 1px;
   }
   .hall-page__legend-item:last-child {
-    width: 48% !important;
+    
     margin-bottom: 0.75rem;
     gap: 1px;
   }
@@ -928,6 +959,13 @@ label, small, strong, em,
     width: 20px;
     height: 20px;
   }
+  .first-col {
+  width: 70%;
+}
+
+.second-col {
+  width: 30%;
+}
 }
 
 @media (max-width: 320px) {
@@ -944,20 +982,32 @@ label, small, strong, em,
     margin-bottom: 0.75rem;
   }
   .hall-page__legend-item {
-    width: 48% !important;
+    
     gap: 1px;
   }
+  .first-col {
+  width: 70%;
+}
+
+.second-col {
+  width: 30%;
+}
+.hall-page__screen-image{
+  padding: 15px !important;
+}
 }
 
 /* ===== СТРАНИЦА ОПЛАТЫ ===== */
 .payment-card__title {
+  padding: 25px 15px;
   text-align: left;
   color: #C76F00;
   font-weight: 700;
-  margin-bottom: 30px;
-  padding-bottom: 15px;
-  border-bottom: 5px dotted #C76F00;
+line-height: 25px;
+ background-color: rgba(241, 235, 230, 0.95); 
+  letter-spacing: 0%;
   font-size: 22px;
+  
 }
 
 .payment-card__info-item {
@@ -976,6 +1026,10 @@ label, small, strong, em,
   flex-shrink: 0;
   width: 180px;
 }
+.button-get-code {
+  width: 337px;
+  margin-top: 15px;
+}
 
 .payment-card__value {
   color: #000000;
@@ -988,18 +1042,7 @@ label, small, strong, em,
   color: #000000;
 }
 
-.payment-card__button {
-  height: 40px;
-  background: rgba(22, 166, 175, 1) !important;
-  border: 1px rgba(22, 166, 175, 1) !important;
-  border-radius: 3px !important;
-  padding-bottom: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
+
 
 .payment-card__alert {
   border-radius: 10px;
@@ -1009,7 +1052,7 @@ label, small, strong, em,
 }
 
 .payment-card__notice {
-  padding: 15px 20px;
+  padding: 15px 0px;
   color: #000000;
   font-size: 14px;
   font-weight: 300;
@@ -1020,9 +1063,7 @@ label, small, strong, em,
   .payment-page__main {
     padding: 0px 0px;
   }
-  .payment-card__info {
-    padding: 20px;
-  }
+
   .payment-card__info-item {
     flex-direction: column;
     gap: 5px;
@@ -1041,11 +1082,9 @@ label, small, strong, em,
 }
 
 @media (max-width: 576px) {
-  .payment-card__info {
-    padding: 15px;
-  }
+
   .payment-card__notice {
-    padding: 12px 15px;
+    padding: 0px 15px;
     font-size: 0.9rem;
   }
 }
@@ -1128,24 +1167,23 @@ label, small, strong, em,
   border: none !important;
   overflow: hidden;
   margin: 0px auto;
-  max-width: 400px;
+  max-width: 200px;
   position: relative;
   animation: qrFloat 3s ease-in-out infinite;
 }
 
-.ticket-qr__body {
-  padding: 10px;
-  text-align: center;
-}
+
 
 .ticket-qr__code {
   border: 5px solid white;
   border-radius: 0px;
   transition: transform 0.5s ease;
+  margin-bottom: 30px;
 }
 
 .ticket-instructions {
-  padding: 10px 0px;
+  font-weight: 300;
+  padding-bottom: 15px;
   border-radius: 15px;
   color: #000000;
   font-size: 14px;
@@ -1161,9 +1199,7 @@ label, small, strong, em,
   .ticket-header__title {
     font-size: 1.8rem;
   }
-  .ticket-details {
-    padding: 25px;
-  }
+
   .ticket-details__item {
     flex-direction: column;
     align-items: flex-start;
@@ -1177,9 +1213,7 @@ label, small, strong, em,
   .ticket-details__value {
     width: 100%;
   }
-  .ticket-qr {
-    margin: 30px auto;
-  }
+
   .ticket-actions {
     flex-direction: column;
     align-items: center;
@@ -1197,13 +1231,8 @@ label, small, strong, em,
   .ticket-header__title {
     font-size: 1.5rem;
   }
-  .ticket-details {
-    padding: 20px;
-  }
-  .ticket-instructions {
-    padding: 20px;
-    font-size: 1rem;
-  }
+ 
+
   .ticket-seat-badge {
     display: block;
     margin-right: 0;
@@ -1223,19 +1252,20 @@ label, small, strong, em,
   .ticket-details__value {
     font-size: 14px;
   }
-  .ticket-qr {
-    max-width: 280px;
-  }
+
 }
 
 /* ===== СТИЛИ ДЛЯ АДМИНСКИХ СТРАНИЦ ===== */
+/* Если нужно сохранить затемнение, добавляем его через другой подход */
 body.admin-page {
-  background-image: url('../public/images/admin-bg.jpg');
+  background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('../public/images/admin-bg.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-color: #2c3e50;
+  background-attachment: scroll; /* Изменено с fixed на scroll */
 }
+
+
 
 /* Убираем отступы у карточки авторизации */
 .admin-login-card {
@@ -1257,8 +1287,13 @@ body.admin-page {
   padding-right: 0 !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
+  padding-bottom: 30px !important;
 }
 
+.form-control {
+  border-radius: 1px !important;
+  border: 1px solid rgba(183, 183, 183, 1) !important;
+}
 body.admin-page::before {
   content: '';
   position: fixed;
@@ -1288,6 +1323,7 @@ body.admin-page::before {
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
+  
 }
 
 .admin-page .user-page__logo {
@@ -1301,11 +1337,13 @@ body.admin-page::before {
   padding-right: 0 !important;
 }
 
+/* Замените существующий стиль */
 .admin-login-card .card-body {
   padding: 0px !important;
   background-color: rgba(234, 233, 235, 0.95) !important;
   border: 0px !important;
-  height: 294px !important;
+  height: auto !important; /* Изменено с 294px на auto */
+  min-height: 294px !important; /* Добавлено минимальная высота */
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
@@ -1322,6 +1360,10 @@ body.admin-page::before {
   align-items: center !important;
   justify-content: center !important;
   text-align: center !important;
+}
+
+.auth-form {
+  height: 237px;
 }
 
 .auth-title {
@@ -1342,11 +1384,11 @@ body.admin-page::before {
 
 .input-line {
   width: 272px;
-  height: 57px;
+  height: 52px;
   margin-left: auto !important;
   margin-right: auto !important;
   display: block !important;
-  margin-bottom: 20px; /* ← Добавить отступ между полями */
+  margin-bottom: 7px; /* ← Добавить отступ между полями */
 }
 
 .admin-login-card form {
@@ -1355,6 +1397,7 @@ body.admin-page::before {
   flex-direction: column;
   align-items: center;
    padding-top: 20px; /* ← Отступ сверху для формы */
+   
 }
 
 .admin-page .api-status-container {
@@ -1368,6 +1411,7 @@ body.admin-page::before {
   .admin-login-card {
     width: 480px !important;
     max-width: 480px !important;
+    
   }
   .admin-login-page-wrapper {
     padding: 0px 20px;
@@ -1383,6 +1427,7 @@ body.admin-page::before {
   .admin-login-card {
     width: 480px !important;
     max-width: 480px !important;
+    
   }
   .admin-login-page-wrapper {
     padding: 0px 20px;
@@ -1400,11 +1445,13 @@ body.admin-page::before {
     max-width: 100% !important;
     margin: 0;
     border-radius: 0 !important;
+    
   }
   .admin-login-page-wrapper {
     padding: 0px 0;
     justify-content: flex-start;
     min-height: 100vh;
+    
   }
   .admin-page .user-page__header {
     padding: 35px 15px !important;
@@ -1439,10 +1486,7 @@ body.admin-page::before {
   .admin-login-card .form-label {
     font-size: 14px;
   }
-  .admin-login-card .form-control {
-    font-size: 14px;
-    padding: 0px 0px;
-  }
+
   .admin-login-card .button {
     height: 45px;
     font-size: 16px;
@@ -1525,7 +1569,7 @@ body.admin-page::before {
 .logo-main {
   font-size: 34px;
   line-height: 39px;
-  letter-spacing: 1px;
+  letter-spacing: 0%;
   text-transform: uppercase;
   color: white;
 }
@@ -1554,6 +1598,12 @@ body.admin-page::before {
   -moz-osx-font-smoothing: grayscale !important;
 }
 
+.create-hall-btn{
+  width: 159px;
+  margin-bottom: 20px;
+  background-color: rgba(22, 166, 175, 1) !important;
+}
+
 /* Делаем обе строки одинаковой ширины */
 .logo-main,
 .logo-admin {
@@ -1569,16 +1619,7 @@ body.admin-page::before {
 }
 
 @media (max-width: 767px) {
-  .user-page__header {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 15px !important;
-  }
-  
-
-  
-
-  
+ 
   .admin-page .api-status-container {
     align-self: flex-start !important;
   }

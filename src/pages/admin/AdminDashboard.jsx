@@ -63,8 +63,8 @@ const StyledModal = ({ show, onHide, title, children, size = "md" }) => {
           }}
         >
           <span style={{
-            fontSize: '24px',
-            color: '#000000',
+            fontSize: '40px',
+            color: '#ffffff',
             lineHeight: '1'
           }}>×</span>
         </button>
@@ -127,8 +127,8 @@ const StyledModalWithFooter = ({ show, onHide, title, children, onConfirm, confi
           }}
         >
           <span style={{
-            fontSize: '24px',
-            color: '#000000',
+            fontSize: '35px',
+            color: '#ffffff',
             lineHeight: '1'
           }}>×</span>
         </button>
@@ -218,10 +218,18 @@ const HallsManagement = () => {
       setNewHallName('');
       setShowCreateModal(false);
       await refreshData();
-      //setNotification({ show: true, type: 'success', message: 'Зал успешно создан' });
+      setNotification({ show: true, type: 'success', message: 'Зал успешно создан' });
+        // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     } catch (error) {
       console.error('Failed to create hall:', error);
-      //setNotification({ show: true, type: 'error', message: 'Не удалось создать зал' });
+      setNotification({ show: true, type: 'error', message: 'Не удалось создать зал' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     } finally {
       setLoading(false);
     }
@@ -240,10 +248,18 @@ const HallsManagement = () => {
       await refreshData();
       setShowDeleteModal(false);
       setHallToDelete(null);
-      //setNotification({ show: true, type: 'success', message: 'Зал успешно удален' });
+      setNotification({ show: true, type: 'success', message: 'Зал успешно удален' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     } catch (error) {
       console.error('Failed to delete hall:', error);
-      //setNotification({ show: true, type: 'error', message: 'Не удалось удалить зал' });
+      setNotification({ show: true, type: 'error', message: 'Не удалось удалить зал' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     }
   };
 
@@ -298,15 +314,16 @@ const HallsManagement = () => {
         </ListGroup>
       </div>
 
-      <div className="text-left">
-        <Button 
-          className='button'
-          variant="primary" 
-          onClick={() => setShowCreateModal(true)}
-        >
-          СОЗДАТЬ ЗАЛ
-        </Button>
-      </div>
+{/* Стало */}
+<div className="create-hall-wrapper">
+  <Button 
+    className='button create-hall-btn'
+    variant="primary" 
+    onClick={() => setShowCreateModal(true)}
+  >
+    СОЗДАТЬ ЗАЛ
+  </Button>
+</div>
 
       <StyledModal 
         show={showCreateModal} 
@@ -328,9 +345,6 @@ const HallsManagement = () => {
                 borderRadius: '3px'
               }}
             />
-            <Form.Text className="text-muted">
-              Укажите уникальное название для зала
-            </Form.Text>
           </Form.Group>
           
           <div className="d-flex justify-content-center gap-2">
@@ -394,13 +408,14 @@ const HallConfiguration = () => {
     }
   };
 
-  const handleGridSizeChange = (newRows, newPlaces) => {
-    const r = Math.max(1, newRows);
-    const p = Math.max(1, newPlaces);
-    setRows(r);
-    setPlaces(p);
-    setConfig(Array(r).fill(null).map(() => Array(p).fill('standart')));
-  };
+const handleGridSizeChange = (newRows, newPlaces) => {
+  // Валидация: не менее 1, не более 20
+  const r = Math.min(Math.max(1, Number(newRows) || 1), 20);
+  const p = Math.min(Math.max(1, Number(newPlaces) || 1), 20);
+  setRows(r);
+  setPlaces(p);
+  setConfig(Array(r).fill(null).map(() => Array(p).fill('standart')));
+};
 
   const handleSeatClick = (r, p) => {
     const newConfig = config.map(row => [...row]);
@@ -423,9 +438,17 @@ const HallConfiguration = () => {
       await ApiService.updateHallConfig(selectedHallId, params);
       await refreshData();
       setNotification({ show: true, type: 'success', message: 'Конфигурация зала сохранена' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     } catch (error) {
       console.error('Failed to save hall config:', error);
       setNotification({ show: true, type: 'error', message: 'Ошибка сохранения' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     }
   };
 
@@ -444,42 +467,47 @@ const HallConfiguration = () => {
       
       <Form.Group className="mb-4">
         <div className="mb-2">Выберите зал для конфигурации:</div>
-        <div className="d-flex flex-wrap gap-0 mt-2">
-          {halls && halls.map(hall => {
-            const isActive = selectedHallId === hall.id;
-            return (
-              <button
-                key={hall.id}
-                type="button"
-                onClick={() => handleHallSelect(hall.id)}
-                style={{
-                  width: isActive ? '90px' : '81px',
-                  height: isActive ? '46px' : '42px',
-                  background: isActive ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 255, 255, 0.45)',
-                  border: 'none',
-                  borderRadius: '3px',
-                  fontFamily: 'Roboto',
-                  fontWeight: 900,
-                  fontSize: '15px',
-                  lineHeight: '16px',
-                  letterSpacing: '0%',
-                  textTransform: 'uppercase',
-                  color: '#000000',
-                  verticalAlign: 'middle',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: isActive 
-                    ? '0px 3px 3px 0px rgba(0, 0, 0, 0.24)' 
-                    : '0px 0px 3px 0px rgba(0, 0, 0, 0.12)'
-                }}
-                className="hall-select-button"
-              >
-                {hall.hall_name}
-              </button>
-            );
-          })}
-        </div>
+<div className="d-flex flex-wrap gap-0 mt-2">
+  {halls && halls.map(hall => {
+    const isActive = selectedHallId === hall.id;
+    return (
+      <button
+        key={hall.id}
+        type="button"
+        onClick={() => handleHallSelect(hall.id)}
+        style={{
+          width: isActive ? '90px' : '81px',
+          height: isActive ? '46px' : '42px',
+          background: isActive ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 255, 255, 0.45)',
+          border: 'none',
+          borderRadius: '3px',
+          fontFamily: 'Roboto',
+          fontWeight: 900,
+          fontSize: '15px',
+          lineHeight: '16px',
+          letterSpacing: '0%',
+          textTransform: 'uppercase',
+          color: '#000000',
+          verticalAlign: 'middle',
+          textAlign: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          boxShadow: isActive 
+            ? '0px 3px 3px 0px rgba(0, 0, 0, 0.24)' 
+            : '0px 0px 3px 0px rgba(0, 0, 0, 0.12)',
+          // РАВНОМЕРНОЕ СМЕЩЕНИЕ ВВЕРХ И ВНИЗ
+          marginTop: isActive ? '-2px' : '2px',      // Смещение вверх на 2px
+          marginBottom: isActive ? '-2px' : '2px',   // Смещение вниз на 2px
+          position: 'relative',
+          zIndex: isActive ? 2 : 1
+        }}
+        className="hall-select-button"
+      >
+        {hall.hall_name}
+      </button>
+    );
+  })}
+</div>
       </Form.Group>
 
       {selectedHallId && (
@@ -559,48 +587,25 @@ const HallConfiguration = () => {
               fontSize: '14px',
               lineHeight: '16px',
               letterSpacing: '0%',
-              color: 'rgba(132, 132, 132, 1)'
+              color: 'rgb(0, 0, 0)'
             }}>
               Теперь вы можете указать типы кресел на схеме зала:
             </div>
-            <div className="d-flex gap-3 mb-3" style={{ 
-              backgroundColor: 'transparent',
-              padding: '10px 0'
-            }}>
-              <div className="d-flex align-items-center gap-1" style={{
-                fontFamily: 'Roboto',
-                fontWeight: 400,
-                fontSize: '14px',
-                lineHeight: '16px',
-                letterSpacing: '0%',
-                color: 'rgba(132, 132, 132, 1)'
-              }}>
-                <div className="seat-icon seat-standart-icon"></div>
-                - обычные кресла
-              </div>
-              <div className="d-flex align-items-center gap-1" style={{
-                fontFamily: 'Roboto',
-                fontWeight: 400,
-                fontSize: '14px',
-                lineHeight: '16px',
-                letterSpacing: '0%',
-                color: 'rgba(132, 132, 132, 1)'
-              }}>
-                <div className="seat-icon seat-vip-icon"></div>
-                - VIP кресла
-              </div>
-              <div className="d-flex align-items-center gap-1" style={{
-                fontFamily: 'Roboto',
-                fontWeight: 400,
-                fontSize: '14px',
-                lineHeight: '16px',
-                letterSpacing: '0%',
-                color: 'rgba(132, 132, 132, 1)'
-              }}>
-                <div className="seat-icon seat-disabled-icon"></div>
-                - заблокированные (нет кресла)
-              </div>
-            </div>
+            {/* Стало - с flex-wrap */}
+<div className="seat-legend">
+  <div className="seat-legend-item">
+    <div className="seat-icon seat-standart-icon"></div>
+    - обычные кресла
+  </div>
+  <div className="seat-legend-item">
+    <div className="seat-icon seat-vip-icon"></div>
+    - VIP кресла
+  </div>
+  <div className="seat-legend-item">
+    <div className="seat-icon seat-disabled-icon"></div>
+    - заблокированные (нет кресла)
+  </div>
+</div>
             <p className="text-muted small">
               Чтобы изменить вид кресла, нажмите по нему левой кнопкой мыши
             </p>
@@ -650,11 +655,11 @@ const HallConfiguration = () => {
             </Card.Body>
           </Card>
 
-          <div className="d-flex justify-content-center gap-2 mb-2">
+          <div className="d-flex justify-content-center gap-3 mb-3">
             <Button className="button white-button" variant="secondary" onClick={() => selectedHallId && handleHallSelect(selectedHallId)}>
               ОТМЕНА
             </Button>
-            <Button className="button" variant="primary" onClick={handleSaveConfig}>
+            <Button className="button save-btn" variant="primary" onClick={handleSaveConfig}>
               СОХРАНИТЬ
             </Button>
           </div>
@@ -691,7 +696,20 @@ const PriceConfiguration = () => {
   const [priceStandart, setPriceStandart] = useState('');
   const [priceVip, setPriceVip] = useState('');
   const [notification, setNotification] = useState({ show: false, type: '', message: '' });
-
+const handlePriceChange = (value, type) => {
+  // Валидация: не менее 0, не более 2000
+  const numValue = Number(value);
+  if (value === '') {
+    type === 'standart' ? setPriceStandart('') : setPriceVip('');
+    return;
+  }
+  if (!isNaN(numValue)) {
+    const validValue = Math.min(Math.max(0, numValue), 2000);
+    type === 'standart' 
+      ? setPriceStandart(String(validValue)) 
+      : setPriceVip(String(validValue));
+  }
+};
   useEffect(() => {
     if (halls && halls.length > 0 && !selectedHallId) {
       handleHallSelect(halls[0].id);
@@ -718,9 +736,17 @@ const PriceConfiguration = () => {
       await ApiService.updateHallPrice(selectedHallId, params);
       await refreshData();
       setNotification({ show: true, type: 'success', message: 'Цены успешно сохранены' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     } catch (error) {
       console.error('Failed to save prices:', error);
       setNotification({ show: true, type: 'error', message: 'Ошибка сохранения цен' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     }
   };
 
@@ -739,42 +765,47 @@ const PriceConfiguration = () => {
       
       <Form.Group className="mb-4">
         <div className="mb-2">Выберите зал для настройки цен:</div>
-        <div className="d-flex flex-wrap gap-0 mt-2">
-          {halls && halls.map(hall => {
-            const isActive = selectedHallId === hall.id;
-            return (
-              <button
-                key={hall.id}
-                type="button"
-                onClick={() => handleHallSelect(hall.id)}
-                style={{
-                  width: isActive ? '90px' : '81px',
-                  height: isActive ? '46px' : '42px',
-                  background: isActive ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 255, 255, 0.45)',
-                  border: 'none',
-                  borderRadius: '3px',
-                  fontFamily: 'Roboto',
-                  fontWeight: 900,
-                  fontSize: '15px',
-                  lineHeight: '16px',
-                  letterSpacing: '0%',
-                  textTransform: 'uppercase',
-                  color: '#000000',
-                  verticalAlign: 'middle',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: isActive 
-                    ? '0px 3px 3px 0px rgba(0, 0, 0, 0.24)' 
-                    : '0px 0px 3px 0px rgba(0, 0, 0, 0.12)'
-                }}
-                className="hall-select-button"
-              >
-                {hall.hall_name}
-              </button>
-            );
-          })}
-        </div>
+<div className="d-flex flex-wrap gap-0 mt-2">
+  {halls && halls.map(hall => {
+    const isActive = selectedHallId === hall.id;
+    return (
+      <button
+        key={hall.id}
+        type="button"
+        onClick={() => handleHallSelect(hall.id)}
+        style={{
+          width: isActive ? '90px' : '81px',
+          height: isActive ? '46px' : '42px',
+          background: isActive ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 255, 255, 0.45)',
+          border: 'none',
+          borderRadius: '3px',
+          fontFamily: 'Roboto',
+          fontWeight: 900,
+          fontSize: '15px',
+          lineHeight: '16px',
+          letterSpacing: '0%',
+          textTransform: 'uppercase',
+          color: '#000000',
+          verticalAlign: 'middle',
+          textAlign: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          boxShadow: isActive 
+            ? '0px 3px 3px 0px rgba(0, 0, 0, 0.24)' 
+            : '0px 0px 3px 0px rgba(0, 0, 0, 0.12)',
+          // РАВНОМЕРНОЕ СМЕЩЕНИЕ ВВЕРХ И ВНИЗ
+          marginTop: isActive ? '-2px' : '2px',      // Смещение вверх на 2px
+          marginBottom: isActive ? '-2px' : '2px',   // Смещение вниз на 2px
+          position: 'relative',
+          zIndex: isActive ? 2 : 1
+        }}
+        className="hall-select-button"
+      >
+        {hall.hall_name}
+      </button>
+    );
+  })}
+</div>
       </Form.Group>
 
       {selectedHallId && (
@@ -783,11 +814,24 @@ const PriceConfiguration = () => {
           
           <div className="d-flex align-items-center gap-2 mb-2">
             <div style={{ flex: '0 0 100px' }}>
+               <div style={{
+                  fontFamily: 'Roboto',
+                  fontWeight: 400,
+                  fontSize: '12px',
+                  lineHeight: '14px',
+                  letterSpacing: '0%',
+                  marginBottom: '4px',
+                  color: 'rgba(132, 132, 132, 1)'
+                }}>
+                  Цена, рублей
+                </div>
               <Form.Control
                 type="number"
                 value={priceStandart}
-                onChange={e => setPriceStandart(e.target.value)}
-                min="0"
+                 onChange={e => handlePriceChange(e.target.value, 'standart')}
+                 min="1"
+  max="2000"
+  step="1"
                 style={{
                   width: '100px',
                   height: '36px',
@@ -813,11 +857,24 @@ const PriceConfiguration = () => {
 
           <div className="d-flex align-items-center gap-2 mb-4">
             <div style={{ flex: '0 0 100px' }}>
+              <div style={{
+                  fontFamily: 'Roboto',
+                  fontWeight: 400,
+                  fontSize: '12px',
+                  lineHeight: '14px',
+                  letterSpacing: '0%',
+                  marginBottom: '4px',
+                  color: 'rgba(132, 132, 132, 1)'
+                }}>
+                  Цена, рублей
+                </div>
               <Form.Control
                 type="number"
                 value={priceVip}
-                onChange={e => setPriceVip(e.target.value)}
-                min="0"
+                onChange={e => handlePriceChange(e.target.value, 'vip')}
+  min="1"
+  max="2000"
+  step="1"
                 style={{
                   width: '100px',
                   height: '36px',
@@ -841,16 +898,19 @@ const PriceConfiguration = () => {
             </div>
           </div>
 
-          <div className="d-flex justify-content-center gap-2 mb-2">
+          <div className="d-flex justify-content-center gap-3 mb-3">
             <Button className='button white-button' variant="secondary" onClick={() => selectedHallId && handleHallSelect(selectedHallId)}>
               ОТМЕНА
             </Button>
-            <Button className='button' variant="primary" onClick={handleSavePrice}>
+            <Button className='button save-btn' variant="primary" onClick={handleSavePrice}>
               СОХРАНИТЬ
             </Button>
           </div>
           
           <style jsx>{`
+          .save-btn{
+          width: 146px
+          }
             .seat-icon {
               width: 20px;
               height: 20px;
@@ -899,6 +959,20 @@ const SeanceManagement = () => {
   const draggedFilm = useRef(null);
   const draggedSeanceId = useRef(null);
   const dropSuccess = useRef(false);
+  
+  const handleFilmDurationChange = (value) => {
+  // Валидация: не менее 1, не более 300
+  const numValue = Number(value);
+  if (value === '') {
+    setFilmDuration('');
+    return;
+  }
+  if (!isNaN(numValue)) {
+    const validValue = Math.min(Math.max(1, numValue), 300);
+    setFilmDuration(String(validValue));
+  }
+};
+
 
   const filmColors = useMemo(() => {
     const colors = ['#85FF89', '#CAFF85', '#85FFD3', '#85E2FF', '#8599FF'];
@@ -941,10 +1015,15 @@ const SeanceManagement = () => {
     e.preventDefault();
     if (!filmPoster) {
       setNotification({ show: true, type: 'warning', message: 'Пожалуйста, загрузите постер' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
       return;
     }
     
-    const params = new FormData();
+  
+  const params = new FormData();
     params.set('filmName', filmName);
     params.set('filmDuration', filmDuration);
     params.set('filmDescription', filmDescription);
@@ -957,9 +1036,17 @@ const SeanceManagement = () => {
       setShowFilmModal(false);
       setFilmName(''); setFilmDuration(''); setFilmDescription(''); setFilmOrigin(''); setFilmPoster(null);
       setNotification({ show: true, type: 'success', message: 'Фильм успешно добавлен' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     } catch (error) {
       console.error('Failed to add film:', error);
       setNotification({ show: true, type: 'error', message: 'Не удалось добавить фильм' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     }
   };
 
@@ -976,10 +1063,10 @@ const SeanceManagement = () => {
       await refreshData();
       setShowDeleteFilmModal(false);
       setFilmToDelete(null);
-      //setNotification({ show: true, type: 'success', message: 'Фильм успешно удален' });
+      setNotification({ show: true, type: 'success', message: 'Фильм успешно удален' });
     } catch (error) {
       console.error('Failed to delete film:', error);
-      //setNotification({ show: true, type: 'error', message: 'Не удалось удалить фильм' });
+      setNotification({ show: true, type: 'error', message: 'Не удалось удалить фильм' });
     }
   };
 
@@ -987,6 +1074,10 @@ const SeanceManagement = () => {
     e.preventDefault();
     if (!seanceHallId || !seanceFilmId || !seanceTime) {
       setNotification({ show: true, type: 'warning', message: 'Пожалуйста, заполните все поля' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
       return;
     }
     
@@ -1003,10 +1094,18 @@ const SeanceManagement = () => {
       await refreshData();
       setShowSeanceModal(false);
       setSeanceHallId(''); setSeanceFilmId(''); setSeanceTime('12:00');
-      //setNotification({ show: true, type: 'success', message: `Сеанс успешно добавлен на ${roundedTime}` });
+      setNotification({ show: true, type: 'success', message: `Сеанс успешно добавлен на ${roundedTime}` });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     } catch (error) {
       console.error('Failed to add seance:', error);
-      //setNotification({ show: true, type: 'error', message: 'Не удалось добавить сеанс' });
+      setNotification({ show: true, type: 'error', message: 'Не удалось добавить сеанс' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     }
   };
 
@@ -1031,10 +1130,18 @@ const SeanceManagement = () => {
       setDraggedFilmId(null);
       setTargetHallId(null);
       setSeanceTime('12:00');
-      //setNotification({ show: true, type: 'success', message: `Сеанс успешно добавлен на ${roundedTime}` });
+      setNotification({ show: true, type: 'success', message: `Сеанс успешно добавлен на ${roundedTime}` });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     } catch (error) {
       console.error('Failed to add seance:', error);
-      //setNotification({ show: true, type: 'error', message: 'Не удалось добавить сеанс' });
+      setNotification({ show: true, type: 'error', message: 'Не удалось добавить сеанс' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     }
   };
 
@@ -1058,9 +1165,17 @@ const SeanceManagement = () => {
       setShowDeleteSeanceModal(false);
       setSeanceToDelete(null);
       draggedSeanceId.current = null;
-      //setNotification({ show: true, type: 'success', message: 'Сеанс удален' });
+      setNotification({ show: true, type: 'success', message: 'Сеанс удален' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     } catch (e) {
-      //setNotification({ show: true, type: 'error', message: 'Ошибка удаления сеанса' });
+      setNotification({ show: true, type: 'error', message: 'Ошибка удаления сеанса' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     }
   };
 
@@ -1466,9 +1581,9 @@ const SeanceManagement = () => {
         size="lg"
       >
         <Form onSubmit={handleAddFilm}>
-          <Row>
-            <Col md={6}>
-              <Form.Group className="mb-3">
+          
+          
+              <Form.Group className="mb-2">
                 <Form.Label>Название фильма</Form.Label>
                 <Form.Control
                   type="text"
@@ -1482,15 +1597,17 @@ const SeanceManagement = () => {
                   }}
                 />
               </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-3">
+            
+              <Form.Group className="mb-2">
                 <Form.Label>Продолжительность (минут)</Form.Label>
                 <Form.Control
                   type="number"
                   value={filmDuration}
-                  onChange={e => setFilmDuration(e.target.value)}
-                  required
+                   onChange={e => handleFilmDurationChange(e.target.value)}
+  min="1"
+  max="300"
+  step="1"
+  required
                   style={{
                     backgroundColor: 'rgba(255, 255, 255, 1)',
                     border: '1px solid rgba(0, 0, 0, 0.1)',
@@ -1498,11 +1615,11 @@ const SeanceManagement = () => {
                   }}
                 />
               </Form.Group>
-            </Col>
-          </Row>
+            
+         
           
-          <Form.Group className="mb-3">
-            <Form.Label>Описание</Form.Label>
+          <Form.Group className="mb-2">
+            <Form.Label>Описание фильма</Form.Label>
             <Form.Control
               as="textarea"
               rows={3}
@@ -1518,7 +1635,7 @@ const SeanceManagement = () => {
           </Form.Group>
           
           <Form.Group className="mb-3">
-            <Form.Label>Страна производства</Form.Label>
+            <Form.Label>Страна</Form.Label>
             <Form.Control
               type="text"
               value={filmOrigin}
@@ -1532,25 +1649,43 @@ const SeanceManagement = () => {
             />
           </Form.Group>
           
-          <Form.Group className="mb-4">
-            <Form.Label>Постер фильма (PNG)</Form.Label>
-            <Form.Control
-              type="file"
-              accept="image/png"
-              onChange={e => setFilmPoster(e.target.files?.[0])}
-              required
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 1)',
-                border: '1px solid rgba(0, 0, 0, 0.1)',
-                borderRadius: '3px'
-              }}
-            />
-          </Form.Group>
+          
           
 <div className="d-flex justify-content-center gap-2">
   <Button className="button white-button" variant="secondary" onClick={() => setShowFilmModal(false)}>
     Отмена
   </Button>
+ 
+      {/* КНОПКА ЗАГРУЗКИ ПОСТЕРА - ПОСЕРЕДИНЕ */}
+      <div style={{ position: 'relative' }}>
+        <input
+          type="file"
+          id="poster-upload"
+          accept="image/png"
+          onChange={e => setFilmPoster(e.target.files?.[0])}
+          required
+          style={{
+            position: 'absolute',
+            width: '1px',
+            height: '1px',
+            padding: 0,
+            margin: '-1px',
+            overflow: 'hidden',
+            clip: 'rect(0,0,0,0)',
+            border: 0
+          }}
+        />
+        <Button
+          className="button btn-turquoise"
+          variant="primary"
+          onClick={() => document.getElementById('poster-upload').click()}
+          style={{
+            minWidth: '200px'
+          }}
+        >
+          {filmPoster ? 'Постер загружен ✓' : 'ЗАГРУЗИТЬ ПОСТЕР'}
+        </Button>
+      </div>
   <Button className="button" variant="success" type="submit">
     Добавить фильм
   </Button>
@@ -1635,11 +1770,12 @@ const SeanceManagement = () => {
             <Button className="button white-button" variant="secondary" onClick={() => setShowSeanceModal(false)}>
               Отмена
             </Button>
-            <Button className="button" variant="primary" type="submit" 
+            <Button className="button save-btn" variant="primary" type="submit" 
               disabled={seanceHallId && seanceFilmId && seanceTime && 
                 checkSeanceOverlap(seanceHallId, seanceFilmId, displayTime(seanceTime))}>
-              Добавить сеанс на {displayTime(seanceTime)}
+              Добавить сеанс на  {displayTime(seanceTime)}
             </Button>
+
           </div>
         </Form>
       </StyledModal>
@@ -1720,11 +1856,18 @@ const SeanceManagement = () => {
             }}>
               Отмена
             </Button>
-            <Button className="button" variant="primary" type="submit" 
-              disabled={draggedFilmId && targetHallId && seanceTime && 
-                checkSeanceOverlap(targetHallId, draggedFilmId, displayTime(seanceTime))}>
-              Добавить сеанс на {displayTime(seanceTime)}
-            </Button>
+            <Button 
+  className="button btn-turquoise" 
+  variant="primary" 
+  disabled={draggedFilmId && targetHallId && seanceTime && 
+    checkSeanceOverlap(targetHallId, draggedFilmId, displayTime(seanceTime))}
+  style={{
+    minWidth: '200px'
+  }}
+>
+  Добавить сеанс на {displayTime(seanceTime)}
+</Button>
+            
           </div>
         </Form>
       </StyledModal>
@@ -1794,9 +1937,17 @@ const SalesManagement = () => {
         type: 'success', 
         message: hall.hall_open === 1 ? 'Продажи приостановлены' : 'Продажи открыты' 
       });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     } catch (error) {
       console.error('Failed to toggle sales:', error);
       setNotification({ show: true, type: 'error', message: 'Ошибка изменения статуса продаж' });
+              // Скрыть через 3 секунды
+  setTimeout(() => {
+    setNotification({ show: false, type: '', message: '' });
+  }, 3000);
     }
   };
 
@@ -1818,41 +1969,47 @@ const SalesManagement = () => {
       <Form.Group className="mb-4">
         <div className="mb-3">Выберите зал для открытия/закрытия продаж:</div>
         <div className="d-flex flex-wrap gap-0 mt-2">
-          {halls && halls.map(hall => {
-            const isActive = selectedHallId === hall.id;
-            return (
-              <button
-                key={hall.id}
-                type="button"
-                onClick={() => setSelectedHallId(hall.id)}
-                style={{
-                  width: isActive ? '90px' : '81px',
-                  height: isActive ? '46px' : '42px',
-                  background: isActive ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 255, 255, 0.45)',
-                  border: 'none',
-                  borderRadius: '3px',
-                  fontFamily: 'Roboto',
-                  fontWeight: 900,
-                  fontSize: '15px',
-                  lineHeight: '16px',
-                  letterSpacing: '0%',
-                  textTransform: 'uppercase',
-                  color: '#000000',
-                  verticalAlign: 'middle',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: isActive 
-                    ? '0px 3px 3px 0px rgba(0, 0, 0, 0.24)' 
-                    : '0px 0px 3px 0px rgba(0, 0, 0, 0.12)'
-                }}
-                className="hall-select-button"
-              >
-                {hall.hall_name}
-              </button>
-            );
-          })}
-        </div>
+  {halls && halls.map(hall => {
+    const isActive = selectedHallId === hall.id;
+    return (
+      <button
+        key={hall.id}
+        type="button"
+        onClick={() => setSelectedHallId(hall.id)}
+        style={{
+          width: isActive ? '90px' : '81px',
+          height: isActive ? '46px' : '42px',
+          background: isActive ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 255, 255, 0.45)',
+          border: 'none',
+          borderRadius: '3px',
+          fontFamily: 'Roboto',
+          fontWeight: 900,
+          fontSize: '15px',
+          lineHeight: '16px',
+          letterSpacing: '0%',
+          textTransform: 'uppercase',
+          color: '#000000',
+          verticalAlign: 'middle',
+          textAlign: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          boxShadow: isActive 
+            ? '0px 3px 3px 0px rgba(0, 0, 0, 0.24)' 
+            : '0px 0px 3px 0px rgba(0, 0, 0, 0.12)',
+          // РАВНОМЕРНОЕ СМЕЩЕНИЕ ВВЕРХ И ВНИЗ
+          marginTop: isActive ? '-2px' : '2px',      // Смещение вверх на 2px
+          marginBottom: isActive ? '-2px' : '2px',   // Смещение вниз на 2px
+          position: 'relative',
+          zIndex: isActive ? 2 : 1
+        }}
+        className="hall-select-button"
+      >
+        {hall.hall_name}
+      </button>
+    );
+  })}
+</div>
+        
       </Form.Group>
 
       {selectedHall && (
@@ -2250,6 +2407,7 @@ const AdminDashboard = () => {
 
   /* Стили для белой кнопки */
   .button.white-button {
+    width: 121px;
     background-color: #ffffff !important;
     color: #000000 !important;
     border: 1px solid #00000000 !important;
@@ -2293,11 +2451,18 @@ const AdminDashboard = () => {
 .custom-modal .modal-body {
   max-height: calc(90vh - 57px) !important;
   overflow-y: auto !important;
-  padding: 24px !important;
+  padding: 34px 105px !important;
 }
 
 .custom-modal.modal-footer .modal-body {
   max-height: calc(90vh - 114px) !important;
+}
+
+.button.btn-turquoise {
+  background-color: rgba(22, 166, 175, 1) !important;  /* Бирюзовый цвет */
+  color: #ffffff !important;
+  border: 1px solid rgba(22, 166, 175, 1) !important;
+  box-shadow: 0px 3px 3px 0px rgba(0, 0, 0, 0.24);
 }
 
 /* Стили для полей ввода в модальных окнах */
@@ -2357,11 +2522,51 @@ const AdminDashboard = () => {
   justify-content: center;
   align-items: center;
 }
+/* Легенда типов кресел */
+.seat-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+  /* Элемент с заблокированными креслами может переноситься целиком */
+.seat-legend-item:last-child {
+  white-space: normal; /* Разрешаем перенос для последнего элемента */
+}
 
-.custom-modal .button:not(.white-button) {
-  background-color: rgba(255, 255, 255, 1) !important;
-  color: #000000 !important;
-  box-shadow: 0px 3px 3px 0px rgba(0, 0, 0, 0.24);
+.seat-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 16px;
+  color: rgba(132, 132, 132, 1);
+  white-space: nowrap; /* Запрещаем перенос внутри элемента */
+}
+
+/* Мобильная версия - центрирование логотипа */
+@media (max-width: 767px) {
+  .user-page__header {
+    display: flex;
+    justify-content: center !important;
+    align-items: center;
+    padding: 15px !important;
+    width: 100%;
+  }
+    .create-hall-wrapper {
+    display: flex;
+    justify-content: center !important;
+    width: 100%;
+  }
+  
+  .create-hall-btn {
+    width: auto;
+    min-width: 180px;
+  }
+
 }
 
 .custom-modal .button:not(.white-button):hover {
